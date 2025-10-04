@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Settings - PolyLearn</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="accessibility">
+    <!-- ==================== NAVIGATION BAR ==================== -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">📚</span>
+                <span class="logo-text">PolyLearn</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="teacher.html" class="nav-link">Teachers</a></li>
+                <li><a href="student.html" class="nav-link">Students</a></li>
+                <li><a href="district.html" class="nav-link">District</a></li>
+                <li><a href="accessibility.html" class="nav-link active" aria-current="page">Accessibility</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== ACCESSIBILITY PAGE ==================== -->
+    <main role="main">
+        <div class="content-container">
+            <h1 class="page-title">Accessibility Settings</h1>
+            <p class="page-subtitle">Customize your learning experience to match your needs and preferences.</p>
+
+            <div class="settings-grid">
+                <!-- Theme Settings -->
+                <div class="settings-card">
+                    <h2>Visual Theme</h2>
+                    <p>Choose a color scheme that works best for you.</p>
+                    <div class="settings-options">
+                        <button class="theme-btn active" data-theme="light" aria-label="Light theme">
+                            <span class="theme-icon">☀️</span>
+                            <span>Light</span>
+                        </button>
+                        <button class="theme-btn" data-theme="dark" aria-label="Dark theme">
+                            <span class="theme-icon">🌙</span>
+                            <span>Dark</span>
+                        </button>
+                        <button class="theme-btn" data-theme="high-contrast" aria-label="High contrast theme">
+                            <span class="theme-icon">⚡</span>
+                            <span>High Contrast</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Font Size -->
+                <div class="settings-card">
+                    <h2>Text Size</h2>
+                    <p>Adjust the size of text for comfortable reading.</p>
+                    <div class="settings-options">
+                        <button class="size-btn" data-size="small" aria-label="Small text size">
+                            <span>A</span>
+                            <span>Small</span>
+                        </button>
+                        <button class="size-btn active" data-size="medium" aria-label="Medium text size">
+                            <span>A</span>
+                            <span>Medium</span>
+                        </button>
+                        <button class="size-btn" data-size="large" aria-label="Large text size">
+                            <span>A</span>
+                            <span>Large</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reading Speed -->
+                <div class="settings-card">
+                    <h2>Reading Speed</h2>
+                    <p>Control the pace of narrated content.</p>
+                    <div class="settings-options">
+                        <button class="speed-btn" data-speed="slow" aria-label="Slow reading speed">
+                            <span>🐢</span>
+                            <span>Slow</span>
+                        </button>
+                        <button class="speed-btn active" data-speed="normal" aria-label="Normal reading speed">
+                            <span>▶️</span>
+                            <span>Normal</span>
+                        </button>
+                        <button class="speed-btn" data-speed="fast" aria-label="Fast reading speed">
+                            <span>⚡</span>
+                            <span>Fast</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Language -->
+                <div class="settings-card">
+                    <h2>Preferred Language</h2>
+                    <p>Select your primary language for lessons.</p>
+                    <select id="language-select" class="form-select" aria-label="Select preferred language">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="zh">中文</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                </div>
+
+                <!-- Additional Options -->
+                <div class="settings-card">
+                    <h2>Additional Options</h2>
+                    <div class="toggle-options">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="reduce-motion" aria-label="Reduce animations">
+                            <span class="toggle-switch"></span>
+                            <span>Reduce Animations</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="screen-reader" aria-label="Screen reader optimizations">
+                            <span class="toggle-switch"></span>
+                            <span>Screen Reader Optimizations</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="keyboard-nav" checked aria-label="Enhanced keyboard navigation">
+                            <span class="toggle-switch"></span>
+                            <span>Enhanced Keyboard Navigation</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-actions">
+                <button class="btn btn-primary" id="save-settings">
+                    <span>Save Preferences</span>
+                    <span class="btn-icon">✓</span>
+                </button>
+                <button class="btn btn-outline" id="reset-settings">Reset to Defaults</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

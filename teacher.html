@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - PolyLearn</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="teacher">
+    <!-- ==================== NAVIGATION BAR ==================== -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">📚</span>
+                <span class="logo-text">PolyLearn</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="teacher.html" class="nav-link active" aria-current="page">Teachers</a></li>
+                <li><a href="student.html" class="nav-link">Students</a></li>
+                <li><a href="district.html" class="nav-link">District</a></li>
+                <li><a href="accessibility.html" class="nav-link">Accessibility</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== TEACHER DASHBOARD ==================== -->
+    <main class="teacher-container" role="main">
+        <div class="teacher-header">
+            <div class="teacher-header-content">
+                <div>
+                    <h1 class="dashboard-title">Welcome, Dr. Smith</h1>
+                    <p class="dashboard-subtitle">Transform your lessons into personalized learning experiences</p>
+                </div>
+                <div class="teacher-profile">
+                    <span class="profile-name">Teacher</span>
+                    <div class="profile-avatar">👨‍🏫</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="teacher-content">
+            <!-- Stats Section -->
+            <section class="stats-section">
+                <h2 class="section-heading">Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-info">
+                            <h3>12</h3>
+                            <p>Lessons Created</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3>156</h3>
+                            <p>Students Reached</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <h3>48</h3>
+                            <p>Personalized Versions</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-info">
+                            <h3>94%</h3>
+                            <p>Student Satisfaction</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <h2 class="section-heading">Create New Lesson</h2>
+                
+                <div class="upload-area" id="upload-area" tabindex="0" role="button" aria-label="Upload file area">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drag & Drop your file here</h3>
+                    <p>or</p>
+                    <button class="btn btn-secondary" id="browse-btn">Browse Files</button>
+                    <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" hidden aria-label="File upload input">
+                    <p class="upload-hint">Supports: PDF, DOC, DOCX, TXT</p>
+                </div>
+
+                <div class="upload-file-info" id="file-info" style="display: none;">
+                    <div class="file-preview">
+                        <span class="file-icon">📄</span>
+                        <div class="file-details">
+                            <h4 id="file-name">--</h4>
+                            <p id="file-size">--</p>
+                        </div>
+                        <button class="btn-remove" id="remove-file" aria-label="Remove file">✕</button>
+                    </div>
+                </div>
+
+                <!-- Additional Lesson Text Input -->
+                <div class="lesson-text-section">
+                    <label for="lesson-text" class="form-label">
+                        <span style="font-weight: 600;">Additional Lesson Instructions (Optional)</span>
+                        <span style="display: block; font-size: 14px; color: var(--gray-600); margin-top: 4px;">
+                            Add extra context, instructions, or learning objectives. You can use this instead of uploading a file, or in addition to it.
+                        </span>
+                    </label>
+                    <textarea 
+                        id="lesson-text" 
+                        class="form-textarea" 
+                        rows="6" 
+                        placeholder="Example: Focus on the causes of WWII, emphasize the Treaty of Versailles impact. Include timeline from 1919-1939. Students should understand economic factors and political tensions."
+                        aria-label="Additional lesson text"
+                        style="width: 100%; padding: 12px; border: 2px solid var(--gray-300); border-radius: 8px; font-family: inherit; font-size: 14px; line-height: 1.6; resize: vertical; min-height: 120px;"
+                    ></textarea>
+                    <p style="font-size: 13px; color: var(--gray-500); margin-top: 8px;">
+                        💡 <strong>Tip:</strong> If you provide text without a file, the AI will create a complete lesson from your instructions alone.
+                    </p>
+                </div>
+
+                <div class="subject-selector">
+                    <label for="subject-select">Select Subject:</label>
+                    <select id="subject-select" class="form-select" aria-label="Select subject">
+                        <option value="">Choose a subject...</option>
+                        <option value="math">Mathematics</option>
+                        <option value="science">Science</option>
+                        <option value="language">Language Arts (Foreign Language)</option>
+                        <option value="history">History</option>
+                        <option value="geography">Geography</option>
+                    </select>
+                </div>
+
+                <!-- Language Learning Info Banner -->
+                <div class="info-banner" id="language-info-banner" style="display: none; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h4 style="color: #92400E; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">🤖</span>
+                        AI Translation Coach Mode
+                    </h4>
+                    <p style="color: #78350F; line-height: 1.6; margin-bottom: 12px;">
+                        <strong>For Language Arts materials:</strong> AI will create interactive translation exercises that work like Google Translate, 
+                        but with a critical difference - instead of giving direct translations, it asks students guided questions about:
+                    </p>
+                    <ul style="color: #78350F; margin-left: 20px; line-height: 1.8;">
+                        <li><strong>Tense selection</strong> - "Should this be preterite or imperfect?"</li>
+                        <li><strong>Vocabulary choices</strong> - "Which word is more appropriate in this context?"</li>
+                        <li><strong>Grammar rules</strong> - "Where does the adjective go in this sentence?"</li>
+                        <li><strong>Cultural context</strong> - "Is this formal or informal speech?"</li>
+                    </ul>
+                    <p style="color: #78350F; line-height: 1.6; margin-top: 12px; font-style: italic;">
+                        💡 This approach builds critical thinking and real language understanding, not just memorization!
+                    </p>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="generate-btn" disabled aria-label="Generate lesson materials">
+                    <span>Generate Lesson Materials</span>
+                    <span class="btn-icon">✨</span>
+                </button>
+
+                <!-- Loading State -->
+                <div class="loading-container" id="loading-container" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <h3>Generating Personalized Materials...</h3>
+                    <p>AI is creating multiple versions for different learning styles</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">0%</p>
+                </div>
+
+                <!-- Generated Materials -->
+                <div class="generated-materials" id="generated-materials" style="display: none;">
+                    <h2>✅ Materials Generated Successfully!</h2>
+                    <p class="materials-subtitle">Your lesson has been transformed into 4 personalized formats:</p>
+                    
+                    <div class="materials-grid">
+                        <div class="material-card" data-material="simplified">
+                            <div class="material-header">
+                                <span class="material-icon">📖</span>
+                                <h3>Simplified Text</h3>
+                            </div>
+                            <p>Easy-to-read version with clear language and simple explanations.</p>
+                            <button class="btn btn-outline" data-preview="simplified">Preview</button>
+                        </div>
+
+                        <div class="material-card" data-material="audio">
+                            <div class="material-header">
+                                <span class="material-icon">🎧</span>
+                                <h3>Audio Narration</h3>
+                            </div>
+                            <p>Fully narrated lesson with adjustable speed and voice options.</p>
+                            <button class="btn btn-outline" data-preview="audio">Preview</button>
+                        </div>
+
+                        <div class="material-card" data-material="visual">
+                            <div class="material-header">
+                                <span class="material-icon">🎨</span>
+                                <h3>Visualized Lesson</h3>
+                            </div>
+                            <p>Animated diagrams and visual explanations (Manim-style).</p>
+                            <button class="btn btn-outline" data-preview="visual">Preview</button>
+                        </div>
+
+                        <div class="material-card" data-material="quiz">
+                            <div class="material-header">
+                                <span class="material-icon">🎯</span>
+                                <h3>Interactive Quiz</h3>
+                            </div>
+                            <p>Gamified questions and activities based on lesson content.</p>
+                            <button class="btn btn-outline" data-preview="quiz">Preview</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- My Lessons Section -->
+            <section class="lessons-section">
+                <h2 class="section-heading">My Recent Lessons</h2>
+                <div class="lessons-list">
+                    <div class="lesson-item">
+                        <div class="lesson-info">
+                            <span class="lesson-subject science">Science</span>
+                            <h3>Photosynthesis Basics</h3>
+                            <p>Uploaded 2 days ago • 4 versions generated • 28 students</p>
+                        </div>
+                        <div class="lesson-actions">
+                            <button class="btn btn-outline btn-sm">Edit</button>
+                            <button class="btn btn-primary btn-sm">View</button>
+                        </div>
+                    </div>
+
+                    <div class="lesson-item">
+                        <div class="lesson-info">
+                            <span class="lesson-subject language">Language</span>
+                            <h3>Past Tense Verbs</h3>
+                            <p>Uploaded 5 days ago • 4 versions generated • 32 students</p>
+                        </div>
+                        <div class="lesson-actions">
+                            <button class="btn btn-outline btn-sm">Edit</button>
+                            <button class="btn btn-primary btn-sm">View</button>
+                        </div>
+                    </div>
+
+                    <div class="lesson-item">
+                        <div class="lesson-info">
+                            <span class="lesson-subject history">History</span>
+                            <h3>World War I Timeline</h3>
+                            <p>Uploaded 1 week ago • 4 versions generated • 25 students</p>
+                        </div>
+                        <div class="lesson-actions">
+                            <button class="btn btn-outline btn-sm">Edit</button>
+                            <button class="btn btn-primary btn-sm">View</button>
+                        </div>
+                    </div>
+
+                    <div class="lesson-item">
+                        <div class="lesson-info">
+                            <span class="lesson-subject math">Math</span>
+                            <h3>Linear Equations</h3>
+                            <p>Uploaded 1 week ago • 4 versions generated • 30 students</p>
+                        </div>
+                        <div class="lesson-actions">
+                            <button class="btn btn-outline btn-sm">Edit</button>
+                            <button class="btn btn-primary btn-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Settings -->
+            <section class="settings-section">
+                <h2 class="section-heading">Quick Settings</h2>
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label for="teacher-name">Name</label>
+                        <input type="text" id="teacher-name" class="form-input" value="Dr. Smith" aria-label="Teacher name">
+                    </div>
+                    <div class="form-group">
+                        <label for="teacher-email">Email</label>
+                        <input type="email" id="teacher-email" class="form-input" value="teacher@polylearn.edu" aria-label="Teacher email">
+                    </div>
+                    <div class="form-group">
+                        <label for="default-subject">Default Subject</label>
+                        <select id="default-subject" class="form-select" aria-label="Default subject">
+                            <option value="">No default</option>
+                            <option value="math">Mathematics</option>
+                            <option value="science" selected>Science</option>
+                            <option value="language">Language Arts</option>
+                            <option value="history">History</option>
+                            <option value="geography">Geography</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary">Save Changes</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ==================== MATERIAL PREVIEW MODAL ==================== -->
+    <div class="modal" id="material-modal" role="dialog" aria-labelledby="material-modal-title" aria-modal="true">
+        <div class="modal-overlay" data-close-material-modal></div>
+        <div class="modal-content">
+            <button class="modal-close" data-close-material-modal aria-label="Close modal">✕</button>
+            
+            <div class="modal-header">
+                <h2 id="material-modal-title">Material Preview</h2>
+            </div>
+
+            <div class="modal-body" id="material-modal-body">
+                <!-- Dynamic content inserted here -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" data-close-material-modal>Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

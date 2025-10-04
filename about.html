@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About PolyLearn</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="about">
+    <!-- ==================== NAVIGATION BAR ==================== -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">📚</span>
+                <span class="logo-text">PolyLearn</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="teacher.html" class="nav-link">Teachers</a></li>
+                <li><a href="student.html" class="nav-link">Students</a></li>
+                <li><a href="district.html" class="nav-link">District</a></li>
+                <li><a href="accessibility.html" class="nav-link">Accessibility</a></li>
+                <li><a href="about.html" class="nav-link active" aria-current="page">About</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== ABOUT PAGE ==================== -->
+    <main role="main">
+        <div class="content-container">
+            <h1 class="page-title">About PolyLearn</h1>
+            
+            <div class="about-mission">
+                <h2>Our Mission</h2>
+                <p class="mission-statement">
+                    PolyLearn bridges the gap between teachers and diverse learners by transforming a single lesson upload 
+                    into multiple inclusive, personalized learning experiences. We believe every student deserves content 
+                    that matches their unique learning style, language, and accessibility needs.
+                </p>
+            </div>
+
+            <div class="about-how-it-works">
+                <h2>How It Works</h2>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3>Teachers Upload</h3>
+                        <p>Teachers upload their lesson materials once — any format, any subject.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3>AI Transforms</h3>
+                        <p>Our AI analyzes content and generates personalized versions for different learning styles.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3>Students Learn</h3>
+                        <p>Each student receives content tailored to their profile — visual, audio, simplified, or gamified.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-subjects">
+                <h2>Subject-Specific AI Modes</h2>
+                <div class="subjects-grid">
+                    <div class="subject-mode-card language">
+                        <h3>🗣️ Language Arts (Foreign Language)</h3>
+                        <h4>AI Translation Coach</h4>
+                        <p>Like Google Translate, but instead of direct answers, AI asks guided questions about tense, vocabulary, grammar, and cultural context to build critical thinking skills.</p>
+                    </div>
+                    <div class="subject-mode-card science">
+                        <h3>🔬 Math & Science</h3>
+                        <h4>Manim Mode</h4>
+                        <p>Visual step-by-step animations and diagram-based explanations.</p>
+                    </div>
+                    <div class="subject-mode-card history">
+                        <h3>📜 History</h3>
+                        <h4>Story Mode</h4>
+                        <p>Timeline-based narrated stories with historical context.</p>
+                    </div>
+                    <div class="subject-mode-card geography">
+                        <h3>🌍 Geography</h3>
+                        <h4>GeoGames</h4>
+                        <p>Map-based games and interactive geographical activities.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-powered-by">
+                <h2>Powered By</h2>
+                <div class="tech-stack">
+                    <div class="tech-badge">🤖 Google Gemini AI</div>
+                    <div class="tech-badge">🎙️ ElevenLabs Voice</div>
+                    <div class="tech-badge">🎨 Manim Animations</div>
+                    <div class="tech-badge">♿ WCAG 2.1 AA</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

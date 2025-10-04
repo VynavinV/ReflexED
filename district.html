@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>District Admin - PolyLearn</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="district">
+    <!-- ==================== NAVIGATION BAR ==================== -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">📚</span>
+                <span class="logo-text">PolyLearn</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="teacher.html" class="nav-link">Teachers</a></li>
+                <li><a href="student.html" class="nav-link">Students</a></li>
+                <li><a href="district.html" class="nav-link active" aria-current="page">District</a></li>
+                <li><a href="accessibility.html" class="nav-link">Accessibility</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== DISTRICT DASHBOARD ==================== -->
+    <main class="district-container" role="main">
+        <div class="district-header">
+            <div class="district-header-content">
+                <div>
+                    <h1 class="dashboard-title">Springfield School District</h1>
+                    <p class="dashboard-subtitle">District-wide Analytics & Management</p>
+                </div>
+                <div class="district-profile">
+                    <span class="profile-name">Admin Portal</span>
+                    <div class="profile-avatar">🏛️</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="district-content">
+            <!-- District Overview Stats -->
+            <section class="stats-section">
+                <h2 class="section-heading">District Overview</h2>
+                <div class="stats-grid stats-grid-large">
+                    <div class="stat-card stat-card-large">
+                        <div class="stat-icon">🏫</div>
+                        <div class="stat-info">
+                            <h3>24</h3>
+                            <p>Schools Using PolyLearn</p>
+                            <span class="stat-change positive">+3 this month</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-large">
+                        <div class="stat-icon">👨‍🏫</div>
+                        <div class="stat-info">
+                            <h3>482</h3>
+                            <p>Active Teachers</p>
+                            <span class="stat-change positive">+28 this month</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-large">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3>8,547</h3>
+                            <p>Students Enrolled</p>
+                            <span class="stat-change positive">+156 this month</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-large">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-info">
+                            <h3>1,234</h3>
+                            <p>Lessons Created</p>
+                            <span class="stat-change positive">+89 this week</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-large">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <h3>4,936</h3>
+                            <p>Personalized Materials</p>
+                            <span class="stat-change positive">+356 this week</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-large">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-info">
+                            <h3>92%</h3>
+                            <p>Avg. Student Satisfaction</p>
+                            <span class="stat-change positive">+2% this month</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Usage Analytics -->
+            <section class="analytics-section">
+                <h2 class="section-heading">Usage Analytics</h2>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Most Used AI Modes</h3>
+                        <div class="analytics-list">
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="analytics-icon">🎧</span>
+                                    <span>Audio Narration</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill" style="width: 85%"></div>
+                                </div>
+                                <span class="analytics-value">85%</span>
+                            </div>
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="analytics-icon">📖</span>
+                                    <span>Simplified Text</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill" style="width: 78%"></div>
+                                </div>
+                                <span class="analytics-value">78%</span>
+                            </div>
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="analytics-icon">🎨</span>
+                                    <span>Visual Lessons</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill" style="width: 72%"></div>
+                                </div>
+                                <span class="analytics-value">72%</span>
+                            </div>
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="analytics-icon">🎯</span>
+                                    <span>Interactive Quizzes</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill" style="width: 65%"></div>
+                                </div>
+                                <span class="analytics-value">65%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <h3>Subject Distribution</h3>
+                        <div class="analytics-list">
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="lesson-subject science small">Science</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill science-fill" style="width: 28%"></div>
+                                </div>
+                                <span class="analytics-value">28%</span>
+                            </div>
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="lesson-subject math small">Math</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill math-fill" style="width: 24%"></div>
+                                </div>
+                                <span class="analytics-value">24%</span>
+                            </div>
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="lesson-subject language small">Language</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill language-fill" style="width: 22%"></div>
+                                </div>
+                                <span class="analytics-value">22%</span>
+                            </div>
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="lesson-subject history small">History</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill history-fill" style="width: 16%"></div>
+                                </div>
+                                <span class="analytics-value">16%</span>
+                            </div>
+                            <div class="analytics-item">
+                                <div class="analytics-label">
+                                    <span class="lesson-subject geography small">Geography</span>
+                                </div>
+                                <div class="analytics-bar">
+                                    <div class="analytics-bar-fill geography-fill" style="width: 10%"></div>
+                                </div>
+                                <span class="analytics-value">10%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Top Schools -->
+            <section class="schools-section">
+                <h2 class="section-heading">Top Performing Schools</h2>
+                <div class="schools-grid">
+                    <div class="school-card">
+                        <div class="school-header">
+                            <div>
+                                <h3>Lincoln Elementary</h3>
+                                <p>24 teachers • 456 students</p>
+                            </div>
+                            <div class="school-badge">🏆</div>
+                        </div>
+                        <div class="school-stats">
+                            <div class="school-stat">
+                                <span class="stat-label">Lessons Created</span>
+                                <span class="stat-value">142</span>
+                            </div>
+                            <div class="school-stat">
+                                <span class="stat-label">Satisfaction</span>
+                                <span class="stat-value">96%</span>
+                            </div>
+                            <div class="school-stat">
+                                <span class="stat-label">Engagement</span>
+                                <span class="stat-value">94%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="school-card">
+                        <div class="school-header">
+                            <div>
+                                <h3>Roosevelt Middle School</h3>
+                                <p>32 teachers • 612 students</p>
+                            </div>
+                            <div class="school-badge">🥈</div>
+                        </div>
+                        <div class="school-stats">
+                            <div class="school-stat">
+                                <span class="stat-label">Lessons Created</span>
+                                <span class="stat-value">136</span>
+                            </div>
+                            <div class="school-stat">
+                                <span class="stat-label">Satisfaction</span>
+                                <span class="stat-value">94%</span>
+                            </div>
+                            <div class="school-stat">
+                                <span class="stat-label">Engagement</span>
+                                <span class="stat-value">91%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="school-card">
+                        <div class="school-header">
+                            <div>
+                                <h3>Washington High School</h3>
+                                <p>45 teachers • 892 students</p>
+                            </div>
+                            <div class="school-badge">🥉</div>
+                        </div>
+                        <div class="school-stats">
+                            <div class="school-stat">
+                                <span class="stat-label">Lessons Created</span>
+                                <span class="stat-value">128</span>
+                            </div>
+                            <div class="school-stat">
+                                <span class="stat-label">Satisfaction</span>
+                                <span class="stat-value">92%</span>
+                            </div>
+                            <div class="school-stat">
+                                <span class="stat-label">Engagement</span>
+                                <span class="stat-value">89%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="activity-section">
+                <h2 class="section-heading">Recent District Activity</h2>
+                <div class="activity-feed">
+                    <div class="activity-item">
+                        <div class="activity-icon">📚</div>
+                        <div class="activity-content">
+                            <h4>New Lesson: "Climate Change Basics"</h4>
+                            <p>Dr. Johnson at Roosevelt MS • Science • 5 minutes ago</p>
+                        </div>
+                        <span class="activity-badge new">New</span>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon">🏫</div>
+                        <div class="activity-content">
+                            <h4>Jefferson Elementary joined PolyLearn</h4>
+                            <p>16 teachers enrolled • 15 minutes ago</p>
+                        </div>
+                        <span class="activity-badge new">New</span>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon">⭐</div>
+                        <div class="activity-content">
+                            <h4>High satisfaction rating achieved</h4>
+                            <p>Lincoln Elementary reached 96% student satisfaction • 1 hour ago</p>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon">👥</div>
+                        <div class="activity-content">
+                            <h4>125 new students enrolled</h4>
+                            <p>Across 5 schools • 2 hours ago</p>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-icon">🎯</div>
+                        <div class="activity-content">
+                            <h4>Milestone: 5,000 personalized materials</h4>
+                            <p>District-wide achievement • 3 hours ago</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- District Settings -->
+            <section class="settings-section">
+                <h2 class="section-heading">District Settings</h2>
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label for="district-name">District Name</label>
+                        <input type="text" id="district-name" class="form-input" value="Springfield School District" aria-label="District name">
+                    </div>
+                    <div class="form-group">
+                        <label for="district-email">Contact Email</label>
+                        <input type="email" id="district-email" class="form-input" value="admin@springfield.edu" aria-label="District email">
+                    </div>
+                    <div class="form-group">
+                        <label for="license-type">License Type</label>
+                        <select id="license-type" class="form-select" aria-label="License type">
+                            <option value="enterprise" selected>Enterprise - Unlimited</option>
+                            <option value="standard">Standard - 10,000 students</option>
+                            <option value="basic">Basic - 5,000 students</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" checked>
+                            <span class="toggle-switch"></span>
+                            <span>Enable AI-powered analytics</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" checked>
+                            <span class="toggle-switch"></span>
+                            <span>Allow cross-school collaboration</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-primary">Save District Settings</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

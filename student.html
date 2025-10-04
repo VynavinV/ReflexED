@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - PolyLearn</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="student">
+    <!-- ==================== NAVIGATION BAR ==================== -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">📚</span>
+                <span class="logo-text">PolyLearn</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="teacher.html" class="nav-link">Teachers</a></li>
+                <li><a href="student.html" class="nav-link active" aria-current="page">Students</a></li>
+                <li><a href="district.html" class="nav-link">District</a></li>
+                <li><a href="accessibility.html" class="nav-link">Accessibility</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== STUDENT PORTAL ==================== -->
+    <main role="main">
+        <div class="student-header">
+            <div class="student-header-content">
+                <div class="student-info">
+                    <h1>Welcome back, Alex!</h1>
+                    <p>Your personalized learning journey continues</p>
+                </div>
+                <div class="student-profile">
+                    <span class="profile-name">Alex Chen</span>
+                    <div class="profile-avatar">👤</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="student-container">
+            <div class="personalization-banner">
+                <h2>Your lessons, your way.</h2>
+                <p>All content is personalized to match your learning style and needs.</p>
+                <div class="learning-preferences">
+                    <span class="preference-tag">🎧 Audio Learner</span>
+                    <span class="preference-tag">🎨 Visual Aids</span>
+                    <span class="preference-tag">📖 Simplified Text</span>
+                </div>
+            </div>
+
+            <div class="subject-filter">
+                <label for="subject-filter-select">Filter by Subject:</label>
+                <select id="subject-filter-select" class="form-select" aria-label="Filter lessons by subject">
+                    <option value="all">All Subjects</option>
+                    <option value="science">Science</option>
+                    <option value="language">Language Arts</option>
+                    <option value="history">History</option>
+                    <option value="geography">Geography</option>
+                    <option value="math">Mathematics</option>
+                </select>
+            </div>
+
+            <div class="lessons-feed" id="lessons-feed">
+                <!-- Lessons will be loaded dynamically from the API -->
+                <div style="text-align: center; padding: 60px; color: var(--gray-600);">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📚</div>
+                    <h3>Loading lessons...</h3>
+                    <p>Your personalized learning content will appear here.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== LESSON MODAL ==================== -->
+    <div class="modal" id="lesson-modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <div class="modal-overlay" data-close-modal></div>
+        <div class="modal-content">
+            <button class="modal-close" data-close-modal aria-label="Close modal">✕</button>
+            
+            <div class="modal-header">
+                <h2 id="modal-title">Lesson Title</h2>
+                <span class="modal-subject-badge" id="modal-subject">Subject</span>
+            </div>
+
+            <div class="modal-body" id="modal-body">
+                <!-- Dynamic content inserted here -->
+            </div>
+
+            <div class="modal-controls">
+                <div class="audio-player" id="audio-player">
+                    <button class="audio-btn" id="play-pause-btn" aria-label="Play audio">
+                        <span id="play-icon">▶️</span>
+                    </button>
+                    <div class="audio-progress">
+                        <div class="audio-progress-bar" id="audio-progress-bar"></div>
+                    </div>
+                    <span class="audio-time" id="audio-time">0:00 / 2:30</span>
+                </div>
+
+                <div class="lesson-actions">
+                    <button class="btn btn-outline" id="change-language-btn">
+                        <span>🌍</span>
+                        <span>Change Language</span>
+                    </button>
+                    <button class="btn btn-outline" id="adjust-level-btn">
+                        <span>📊</span>
+                        <span>Adjust Level</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
