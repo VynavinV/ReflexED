@@ -92,5 +92,34 @@ def create_assignment():
         return jsonify({'error': str(e)}), 500
 
 
+@assignments_bp.route('/<assignment_id>/regenerate/quiz', methods=['POST'])
+def regenerate_quiz(assignment_id):
+    """Regenerate the quiz variant for an assignment with adjusted difficulty."""
+    try:
+        assignment = Assignment.query.get_or_404(assignment_id)
+        
+        # Get difficulty from request (optional)
+        data = request.get_json() or {}
+        difficulty = data.get('difficulty', 'medium')  # easy, medium, hard
+        
+        # Regenerate quiz variant
+        svc = AssignmentService()
+        quiz_version = svc.regenerate_variant(
+            assignment=assignment,
+            variant_type='quiz',
+            difficulty=difficulty
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Quiz regenerated successfully',
+            'quiz': quiz_version.to_dict()
+        }), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 def a_slug(text: str) -> str:
     return ''.join(c.lower() if c.isalnum() else '-' for c in text)[:80]

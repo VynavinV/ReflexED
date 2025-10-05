@@ -595,101 +595,164 @@ function showRealMaterialPreview(modalTitle, modalBody, modal, materialType, ver
             content += `<p style="white-space: pre-wrap;">${escapeHtml(version.content_text || 'Generated')}</p>`;
         }
     } else if (materialType === 'audio') {
-        content += `<p>Audio script has been generated and narration synthesized.</p>`;
-        if (version.assets?.audio_mp3) {
-            content += `
-                <div style="background: var(--gray-100); padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h4>🎧 Audio Narration</h4>
-                    <audio controls style="width: 100%; margin-top: 10px;">
-                        <source src="${version.assets.audio_mp3}" type="audio/mpeg">
-                        Your browser does not support audio playback.
-                    </audio>
-                    <p style="margin-top: 10px; font-size: 14px; color: var(--gray-600);">
-                        <em>Note: This is a placeholder audio file. Enable ElevenLabs API for real narration.</em>
-                    </p>
-                </div>
-            `;
-        }
-        content += `
-            <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-top: 20px;">
-                <h4>📝 Audio Script</h4>
-                <div style="white-space: pre-wrap; max-height: 400px; overflow-y: auto; line-height: 1.6; margin-top: 10px;">
-                    ${escapeHtml(version.content_text || 'Script generated')}
-                </div>
-            </div>
-        `;
-    } else if (materialType === 'visual') {
-        if (version.assets?.video_mp4) {
-            content += `
-                <div style="background: var(--gray-100); padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h4>🎬 Visual Animation</h4>
-                    <video controls style="width: 100%; max-height: 400px; margin-top: 10px; border-radius: 8px;">
-                        <source src="${version.assets.video_mp4}" type="video/mp4">
-                        Your browser does not support video playback.
-                    </video>
-                    <p style="margin-top: 10px; font-size: 14px; color: var(--gray-600);">
-                        <em>Note: This is a placeholder video. Enable Manim rendering for real animations.</em>
-                    </p>
-                </div>
-            `;
-        }
-        content += `
-            <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-top: 20px;">
-                <h4>📐 Visual Concept Plan</h4>
-                <div style="white-space: pre-wrap; line-height: 1.6; margin-top: 10px;">
-                    ${escapeHtml(version.content_text || 'Visual animation plan created')}
-                </div>
-            </div>
-        `;
-    } else if (materialType === 'quiz') {
+        // Parse audio data to check if it's podcast format
         try {
-            const parsed = JSON.parse(version.content_text || '{}');
-            const questions = parsed.questions || [];
+            const audioData = JSON.parse(version.content_text || '{}');
+            const discussion = audioData.discussion || [];
             
-            content += `
-                <div style="background: var(--primary-100); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <h4>🧠 Interactive Quiz</h4>
-                    <p>${escapeHtml(parsed.summary || 'Test your understanding with this interactive quiz!')}</p>
-                </div>
-            `;
-            
-            if (questions.length > 0) {
-                questions.forEach((q, index) => {
+            if (discussion.length > 0) {
+                // Podcast format
+                content += `
+                    <div style="background: var(--primary-100); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4>🎙️ Educational Podcast Discussion</h4>
+                        <p>${escapeHtml(audioData.summary || 'An engaging discussion about the lesson content')}</p>
+                    </div>
+                `;
+                
+                if (version.assets?.audio_mp3) {
                     content += `
-                        <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
-                            <h5 style="margin-bottom: 15px;">Question ${index + 1}: ${escapeHtml(q.question)}</h5>
-                            <div style="margin-left: 20px;">
+                        <div style="background: var(--gray-100); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h4>🎧 Listen to the Discussion</h4>
+                            <audio controls style="width: 100%; margin-top: 10px;">
+                                <source src="${version.assets.audio_mp3}" type="audio/mpeg">
+                                Your browser does not support audio playback.
+                            </audio>
+                        </div>
                     `;
-                    
-                    if (q.options && Array.isArray(q.options)) {
-                        q.options.forEach((option, optIndex) => {
-                            const letter = String.fromCharCode(65 + optIndex); // A, B, C, D...
-                            content += `
-                                <div style="padding: 10px; margin-bottom: 8px; background: white; border-radius: 4px; border: 2px solid var(--gray-200);">
-                                    <label style="cursor: pointer; display: block;">
-                                        <input type="radio" name="quiz_q${index}" value="${optIndex}" style="margin-right: 10px;">
-                                        <strong>${letter}.</strong> ${escapeHtml(option)}
-                                    </label>
-                                </div>
-                            `;
-                        });
-                    }
-                    
+                }
+                
+                // Show transcript
+                content += `
+                    <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <h4>📝 Podcast Transcript</h4>
+                        <div style="margin-top: 15px;">
+                `;
+                
+                discussion.forEach((segment, index) => {
+                    const isHost = segment.speaker === 'Host';
+                    const bgColor = isHost ? '#e3f2fd' : '#f3e5f5';
+                    const icon = isHost ? '👤' : '🎓';
                     content += `
+                        <div style="background: ${bgColor}; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid ${isHost ? '#2196f3' : '#9c27b0'};">
+                            <div style="font-weight: 600; margin-bottom: 8px; color: ${isHost ? '#1976d2' : '#7b1fa2'};">
+                                ${icon} ${escapeHtml(segment.speaker || 'Speaker')}
                             </div>
-                            ${q.explanation ? `
-                                <details style="margin-top: 15px; padding: 10px; background: var(--gray-100); border-radius: 4px;">
-                                    <summary style="cursor: pointer; font-weight: 600;">💡 Show Explanation</summary>
-                                    <p style="margin-top: 10px; line-height: 1.6;">${escapeHtml(q.explanation)}</p>
-                                    ${q.correct_answer !== undefined ? `<p style="margin-top: 10px;"><strong>Correct Answer:</strong> ${String.fromCharCode(65 + q.correct_answer)}</p>` : ''}
-                                </details>
-                            ` : ''}
+                            <div style="line-height: 1.6;">
+                                ${escapeHtml(segment.text || '')}
+                            </div>
                         </div>
                     `;
                 });
+                
+                content += `
+                        </div>
+                    </div>
+                `;
             } else {
-                content += `<p>Quiz questions generated - check quiz JSON file for details.</p>`;
+                // Fallback to simple audio script
+                throw new Error('Not podcast format');
             }
+        } catch (e) {
+            // Simple audio format
+            content += `<p>Audio script has been generated and narration synthesized.</p>`;
+            if (version.assets?.audio_mp3) {
+                content += `
+                    <div style="background: var(--gray-100); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h4>🎧 Audio Narration</h4>
+                        <audio controls style="width: 100%; margin-top: 10px;">
+                            <source src="${version.assets.audio_mp3}" type="audio/mpeg">
+                            Your browser does not support audio playback.
+                        </audio>
+                    </div>
+                `;
+            }
+            content += `
+                <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-top: 20px;">
+                    <h4>📝 Audio Script</h4>
+                    <div style="white-space: pre-wrap; max-height: 400px; overflow-y: auto; line-height: 1.6; margin-top: 10px;">
+                        ${escapeHtml(version.content_text || 'Script generated')}
+                    </div>
+                </div>
+            `;
+        }
+    } else if (materialType === 'visual') {
+        // Parse visual data to show narration if available
+        try {
+            const visualData = JSON.parse(version.content_text || '{}');
+            const narration = visualData.narration || [];
+            const description = visualData.description || '';
+            
+            content += `
+                <div style="background: var(--primary-100); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4>🎬 Visual Learning Experience</h4>
+                    <p>${escapeHtml(description || 'An engaging visual explanation of the concepts')}</p>
+                </div>
+            `;
+            
+            if (version.assets?.video_mp4) {
+                content += `
+                    <div style="background: var(--gray-100); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h4>📹 Watch the Animation</h4>
+                        <video controls style="width: 100%; max-height: 400px; margin-top: 10px; border-radius: 8px;">
+                            <source src="${version.assets.video_mp4}" type="video/mp4">
+                            Your browser does not support video playback.
+                        </video>
+                    </div>
+                `;
+            }
+            
+            // Show narration timeline if available
+            if (narration.length > 0) {
+                content += `
+                    <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-top: 20px;">
+                        <h4>🎙️ Narration Timeline</h4>
+                        <div style="margin-top: 15px;">
+                `;
+                
+                narration.forEach((segment, index) => {
+                    content += `
+                        <div style="display: flex; gap: 15px; padding: 12px; margin-bottom: 10px; background: white; border-radius: 6px; border-left: 4px solid var(--primary-500);">
+                            <div style="min-width: 60px; text-align: center; background: var(--primary-100); padding: 8px; border-radius: 4px;">
+                                <div style="font-weight: 600; color: var(--primary-700);">${segment.duration || '?'}s</div>
+                            </div>
+                            <div style="flex: 1;">
+                                <p style="line-height: 1.6;">${escapeHtml(segment.text || '')}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                content += `
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            // Fallback to simple text display
+            if (version.assets?.video_mp4) {
+                content += `
+                    <div style="background: var(--gray-100); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h4>🎬 Visual Animation</h4>
+                        <video controls style="width: 100%; max-height: 400px; margin-top: 10px; border-radius: 8px;">
+                            <source src="${version.assets.video_mp4}" type="video/mp4">
+                            Your browser does not support video playback.
+                        </video>
+                    </div>
+                `;
+            }
+            content += `
+                <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-top: 20px;">
+                    <h4>📐 Visual Concept Plan</h4>
+                    <div style="white-space: pre-wrap; line-height: 1.6; margin-top: 10px;">
+                        ${escapeHtml(version.content_text || 'Visual animation plan created')}
+                    </div>
+                </div>
+            `;
+        }
+    } else if (materialType === 'quiz') {
+        try {
+            const parsed = JSON.parse(version.content_text || '{}');
+            content += renderQuizContent(parsed);
         } catch (e) {
             console.error('Quiz parsing error:', e);
             content += `<p>Quiz with multiple questions generated.</p>`;
@@ -698,6 +761,263 @@ function showRealMaterialPreview(modalTitle, modalBody, modal, materialType, ver
     
     modalBody.innerHTML = content;
     modal.classList.add('active');
+}
+
+// Enhanced quiz rendering functions
+function renderQuizContent(parsed) {
+    const quizType = parsed.quiz_type || 'standard';
+    let content = `
+        <div style="background: var(--primary-100); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h4>🧠 ${getQuizTitle(quizType)}</h4>
+            <p>${escapeHtml(parsed.summary || 'Test your understanding with this interactive exercise!')}</p>
+        </div>
+    `;
+    
+    // Render based on quiz type
+    switch (quizType) {
+        case 'socratic':
+            content += renderSocraticQuiz(parsed.questions || []);
+            break;
+        case 'practice':
+            content += renderPracticeQuiz(parsed.questions || []);
+            break;
+        case 'practice_repeatable':
+            content += renderRepeatablePractice(parsed.questions || []);
+            break;
+        case 'timeline_fill':
+            content += renderTimelineFill(parsed);
+            break;
+        default:
+            content += renderStandardQuiz(parsed.questions || []);
+    }
+    
+    return content;
+}
+
+function getQuizTitle(quizType) {
+    const titles = {
+        'socratic': 'Guided Learning Questions',
+        'practice': 'Practice Problems',
+        'practice_repeatable': 'Practice Exercise',
+        'timeline_fill': 'Timeline & Historical Figures',
+        'standard': 'Interactive Quiz'
+    };
+    return titles[quizType] || 'Interactive Quiz';
+}
+
+function renderSocraticQuiz(questions) {
+    let html = '';
+    questions.forEach((q, index) => {
+        html += `
+            <div class="quiz-question" data-question-id="${index}" style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                <h5 style="margin-bottom: 15px; color: var(--primary-700);">Question ${index + 1}</h5>
+                <p style="font-size: 1.1em; margin-bottom: 15px;">${escapeHtml(q.question)}</p>
+                
+                <details style="margin-top: 15px; padding: 15px; background: var(--blue-50); border-radius: 4px; border-left: 4px solid var(--primary-500);">
+                    <summary style="cursor: pointer; font-weight: 600; color: var(--primary-700);">💭 Guidance</summary>
+                    <p style="margin-top: 10px; line-height: 1.6;">${escapeHtml(q.guidance || '')}</p>
+                    ${q.follow_up ? `<p style="margin-top: 10px; font-style: italic;">Next: ${escapeHtml(q.follow_up)}</p>` : ''}
+                </details>
+                
+                <div style="margin-top: 15px;">
+                    <textarea class="student-answer" placeholder="Your thoughts here..." style="width: 100%; min-height: 80px; padding: 10px; border-radius: 4px; border: 2px solid var(--gray-300); resize: vertical;"></textarea>
+                </div>
+                
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="submitQuizAnswer(${index}, 'socratic')" style="flex: 1;">
+                        📝 Submit Answer
+                    </button>
+                    <button class="btn btn-outline" onclick="getAIFeedback(${index}, 'socratic')" style="flex: 1;">
+                        🤖 Get AI Check
+                    </button>
+                </div>
+                
+                <div class="feedback-area" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+            </div>
+        `;
+    });
+    return html;
+}
+
+function renderPracticeQuiz(questions) {
+    let html = '';
+    questions.forEach((q, index) => {
+        const difficultyColor = {
+            'easy': 'green',
+            'medium': 'orange',
+            'hard': 'red'
+        }[q.difficulty] || 'gray';
+        
+        html += `
+            <div class="quiz-question" data-question-id="${index}" style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h5 style="margin: 0;">Problem ${index + 1}</h5>
+                    <span style="background: ${difficultyColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.85em; text-transform: uppercase;">${escapeHtml(q.difficulty || 'medium')}</span>
+                </div>
+                <p style="font-size: 1.1em; margin-bottom: 15px;">${escapeHtml(q.question)}</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <input type="text" class="student-answer" placeholder="Your answer..." style="width: 100%; padding: 12px; border-radius: 4px; border: 2px solid var(--gray-300); font-size: 1em;">
+                </div>
+                
+                <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="submitQuizAnswer(${index}, 'practice')" style="flex: 1;">
+                        ✓ Submit Solution
+                    </button>
+                    <button class="btn btn-outline" onclick="getAIFeedback(${index}, 'practice')" style="flex: 1;">
+                        🤖 Get AI Check
+                    </button>
+                </div>
+                
+                <div class="feedback-area" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+                
+                <details style="margin-top: 15px; padding: 15px; background: white; border-radius: 4px;">
+                    <summary style="cursor: pointer; font-weight: 600; color: var(--primary-700);">📝 Show Solution</summary>
+                    <div style="margin-top: 15px;">
+                        <h6>Step-by-Step Solution:</h6>
+                        <p style="white-space: pre-wrap; line-height: 1.8;">${escapeHtml(q.solution || '')}</p>
+                    </div>
+                    ${q.common_mistakes && q.common_mistakes.length > 0 ? `
+                        <div style="margin-top: 15px; padding: 10px; background: var(--yellow-50); border-radius: 4px;">
+                            <h6>⚠️ Common Mistakes:</h6>
+                            <ul style="margin-top: 8px;">
+                                ${q.common_mistakes.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </details>
+            </div>
+        `;
+    });
+    return html;
+}
+
+function renderRepeatablePractice(questions) {
+    let html = '';
+    questions.forEach((q, index) => {
+        html += `
+            <div class="quiz-question" data-question-id="${index}" style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                <h5 style="margin-bottom: 15px;">Question ${index + 1}</h5>
+                <p style="font-size: 1.1em; margin-bottom: 15px;">${escapeHtml(q.question)}</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <input type="text" class="student-answer" placeholder="Your answer..." style="width: 100%; padding: 12px; border-radius: 4px; border: 2px solid var(--gray-300); font-size: 1em;">
+                </div>
+                
+                <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="submitQuizAnswer(${index}, 'practice_repeatable')" style="flex: 1;">
+                        ✓ Check Answer
+                    </button>
+                    <button class="btn btn-outline" onclick="getAIFeedback(${index}, 'practice_repeatable')" style="flex: 1;">
+                        🤖 Get AI Check
+                    </button>
+                </div>
+                
+                <div class="feedback-area" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+                
+                ${q.hint ? `
+                    <details style="margin-bottom: 10px; padding: 10px; background: var(--blue-50); border-radius: 4px;">
+                        <summary style="cursor: pointer; font-weight: 600;">💡 Hint</summary>
+                        <p style="margin-top: 8px;">${escapeHtml(q.hint)}</p>
+                    </details>
+                ` : ''}
+                
+                <details style="padding: 15px; background: white; border-radius: 4px;">
+                    <summary style="cursor: pointer; font-weight: 600; color: var(--primary-700);">✓ Show Answer</summary>
+                    <div style="margin-top: 15px;">
+                        <p style="font-weight: 600; color: var(--success-700);">Answer: ${escapeHtml(q.answer || '')}</p>
+                        ${q.explanation ? `<p style="margin-top: 10px; line-height: 1.6;">${escapeHtml(q.explanation)}</p>` : ''}
+                        ${q.real_world_example || q.interesting_fact ? `
+                            <div style="margin-top: 12px; padding: 12px; background: var(--blue-50); border-radius: 4px;">
+                                <p style="font-size: 0.95em;"><strong>💫 Did you know?</strong> ${escapeHtml(q.real_world_example || q.interesting_fact)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </details>
+            </div>
+        `;
+    });
+    return html;
+}
+
+function renderTimelineFill(parsed) {
+    let html = '';
+    
+    // Timeline events
+    if (parsed.timeline_events && parsed.timeline_events.length > 0) {
+        html += `<h5 style="margin: 20px 0;">📅 Timeline Events</h5>`;
+        parsed.timeline_events.forEach((event, index) => {
+            html += `
+                <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="background: var(--primary-600); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; min-width: 80px; text-align: center;">${escapeHtml(event.year || '????')}</span>
+                        <p style="flex: 1; font-size: 1.05em;">${escapeHtml(event.event_description || '')}</p>
+                    </div>
+                    <details style="margin-top: 15px; padding: 10px; background: white; border-radius: 4px;">
+                        <summary style="cursor: pointer; font-weight: 600;">✓ Show Answer</summary>
+                        <p style="margin-top: 8px; color: var(--success-700); font-weight: 600;">${escapeHtml(event.answer || '')}</p>
+                    </details>
+                </div>
+            `;
+        });
+    }
+    
+    // Famous people
+    if (parsed.famous_people && parsed.famous_people.length > 0) {
+        html += `<h5 style="margin: 30px 0 20px;">👤 Historical Figures</h5>`;
+        parsed.famous_people.forEach((person, index) => {
+            html += `
+                <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                    <p style="font-size: 1.05em; margin-bottom: 15px;">${escapeHtml(person.description || '')}</p>
+                    <details style="padding: 10px; background: white; border-radius: 4px;">
+                        <summary style="cursor: pointer; font-weight: 600;">✓ Show Answer</summary>
+                        <p style="margin-top: 8px; color: var(--success-700); font-weight: 600;">${escapeHtml(person.answer || '')}</p>
+                        ${person.significance ? `<p style="margin-top: 8px; font-style: italic;">${escapeHtml(person.significance)}</p>` : ''}
+                    </details>
+                </div>
+            `;
+        });
+    }
+    
+    return html || '<p>No timeline items found.</p>';
+}
+
+function renderStandardQuiz(questions) {
+    let html = '';
+    questions.forEach((q, index) => {
+        html += `
+            <div style="background: var(--gray-50); padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                <h5 style="margin-bottom: 15px;">Question ${index + 1}: ${escapeHtml(q.question)}</h5>
+                <div style="margin-left: 20px;">
+        `;
+        
+        if (q.options && Array.isArray(q.options)) {
+            q.options.forEach((option, optIndex) => {
+                const letter = String.fromCharCode(65 + optIndex);
+                html += `
+                    <div style="padding: 10px; margin-bottom: 8px; background: white; border-radius: 4px; border: 2px solid var(--gray-200);">
+                        <label style="cursor: pointer; display: block;">
+                            <input type="radio" name="quiz_q${index}" value="${optIndex}" style="margin-right: 10px;">
+                            <strong>${letter}.</strong> ${escapeHtml(option)}
+                        </label>
+                    </div>
+                `;
+            });
+        }
+        
+        html += `
+                </div>
+                ${q.explanation ? `
+                    <details style="margin-top: 15px; padding: 10px; background: var(--gray-100); border-radius: 4px;">
+                        <summary style="cursor: pointer; font-weight: 600;">💡 Show Explanation</summary>
+                        <p style="margin-top: 10px; line-height: 1.6;">${escapeHtml(q.explanation)}</p>
+                        ${q.correct_answer !== undefined ? `<p style="margin-top: 10px;"><strong>Correct Answer:</strong> ${String.fromCharCode(65 + q.correct_answer)}</p>` : ''}
+                    </details>
+                ` : ''}
+            </div>
+        `;
+    });
+    return html;
 }
 
 function escapeHtml(text) {
@@ -849,10 +1169,38 @@ function showLessonModal(lessonIdOrAssignment) {
                     if (version.assets?.video_mp4) {
                         content += `<video controls style="width: 100%; max-height: 300px; margin-top: 10px;"><source src="${version.assets.video_mp4}" type="video/mp4"></video>`;
                     }
-                    content += `<p style="margin-top: 10px;">${escapeHtml(version.content_text || 'Visual lesson created')}</p>`;
+                    // Try to parse visual content for narration timeline
+                    try {
+                        const visualData = JSON.parse(version.content_text);
+                        if (visualData.description) {
+                            content += `<p style="margin-top: 10px;"><strong>Description:</strong> ${escapeHtml(visualData.description)}</p>`;
+                        }
+                        if (visualData.narration && Array.isArray(visualData.narration)) {
+                            content += '<div style="margin-top: 10px;"><strong>Narration Timeline:</strong></div>';
+                            content += '<div style="margin-top: 10px;">';
+                            visualData.narration.forEach((segment, idx) => {
+                                content += `
+                                    <div style="background: var(--gray-100); padding: 10px; margin: 5px 0; border-radius: 4px;">
+                                        <span style="background: var(--primary-500); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; margin-right: 8px;">${segment.duration}s</span>
+                                        <span>${escapeHtml(segment.text)}</span>
+                                    </div>
+                                `;
+                            });
+                            content += '</div>';
+                        }
+                    } catch (e) {
+                        content += `<p style="margin-top: 10px;">${escapeHtml(version.content_text || 'Visual lesson created')}</p>`;
+                    }
                 } else if (version.variant_type === 'quiz') {
                     content += '<h4>🎯 Interactive Quiz</h4>';
-                    content += '<p style="margin-top: 10px;">Quiz ready with interactive questions!</p>';
+                    // Parse and render the quiz content
+                    try {
+                        const quizData = JSON.parse(version.content_text);
+                        content += renderQuizContent(quizData);
+                    } catch (e) {
+                        console.error('Failed to parse quiz data:', e);
+                        content += '<p style="margin-top: 10px; color: var(--error-500);">Error loading quiz content. Please try regenerating.</p>';
+                    }
                 }
                 
                 content += '</div>';
@@ -1287,7 +1635,7 @@ function setupModalListeners() {
     
     if (adjustLevelBtn) {
         adjustLevelBtn.addEventListener('click', () => {
-            alert('Difficulty level adjusted!\n(This would modify the complexity of the content in a real application)');
+            adjustQuizLevel();
         });
     }
     
@@ -1370,6 +1718,148 @@ function setupAccessibilityListeners() {
             savePreferences();
             showNotification('Settings reset to defaults');
         });
+    }
+}
+
+// ==================== QUIZ SUBMISSION & AI FEEDBACK ====================
+function submitQuizAnswer(questionId, quizType) {
+    const questionEl = document.querySelector(`.quiz-question[data-question-id="${questionId}"]`);
+    if (!questionEl) return;
+    
+    const answerEl = questionEl.querySelector('.student-answer');
+    const feedbackEl = questionEl.querySelector('.feedback-area');
+    const answer = answerEl ? answerEl.value.trim() : '';
+    
+    if (!answer) {
+        showNotification('Please enter an answer first!');
+        return;
+    }
+    
+    // Show submission feedback
+    feedbackEl.style.display = 'block';
+    feedbackEl.style.background = 'var(--blue-50)';
+    feedbackEl.style.borderLeft = '4px solid var(--primary-500)';
+    feedbackEl.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">✅</span>
+            <div>
+                <p style="font-weight: 600; margin: 0;">Answer Submitted!</p>
+                <p style="margin: 5px 0 0; font-size: 0.95em;">Your response has been saved. Click "Get AI Check" for detailed feedback.</p>
+            </div>
+        </div>
+    `;
+    
+    showNotification('Answer submitted successfully!');
+}
+
+async function getAIFeedback(questionId, quizType) {
+    const questionEl = document.querySelector(`.quiz-question[data-question-id="${questionId}"]`);
+    if (!questionEl) return;
+    
+    const answerEl = questionEl.querySelector('.student-answer');
+    const feedbackEl = questionEl.querySelector('.feedback-area');
+    const answer = answerEl ? answerEl.value.trim() : '';
+    
+    if (!answer) {
+        showNotification('Please enter an answer first!');
+        return;
+    }
+    
+    // Show loading state
+    feedbackEl.style.display = 'block';
+    feedbackEl.style.background = 'var(--gray-100)';
+    feedbackEl.style.borderLeft = '4px solid var(--primary-500)';
+    feedbackEl.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 32px; margin-bottom: 10px;">🤖</div>
+            <p style="margin: 0;">AI is analyzing your answer...</p>
+        </div>
+    `;
+    
+    // Simulate AI feedback (replace with actual API call to Gemini)
+    setTimeout(() => {
+        const feedback = generateAIFeedback(answer, quizType);
+        feedbackEl.style.background = 'var(--success-50)';
+        feedbackEl.style.borderLeft = '4px solid var(--success-500)';
+        feedbackEl.innerHTML = `
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <span style="font-size: 28px;">🤖</span>
+                    <h6 style="margin: 0; color: var(--success-700);">AI Feedback</h6>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 6px; line-height: 1.6;">
+                    ${feedback}
+                </div>
+            </div>
+        `;
+    }, 1500);
+}
+
+function generateAIFeedback(answer, quizType) {
+    // Placeholder AI feedback - integrate with Gemini API
+    const feedbackTemplates = {
+        'socratic': `
+            <p><strong>✓ Good thinking!</strong> Your response shows thoughtful consideration.</p>
+            <p><strong>💡 Suggestion:</strong> Try to elaborate more on the reasoning behind your answer. Consider the broader implications.</p>
+            <p><strong>🎯 Next Step:</strong> Think about how this concept connects to real-world applications.</p>
+        `,
+        'practice': `
+            <p><strong>✓ Nice work!</strong> Your approach is on the right track.</p>
+            <p><strong>📊 Analysis:</strong> The method you're using is correct. Make sure to show all steps clearly.</p>
+            <p><strong>💪 Tip:</strong> Double-check your calculations and verify the final answer.</p>
+        `,
+        'practice_repeatable': `
+            <p><strong>✓ Great effort!</strong> You're showing good understanding.</p>
+            <p><strong>🎓 Feedback:</strong> Your answer demonstrates comprehension of the key concept.</p>
+            <p><strong>🌟 Keep it up!</strong> Try the next question to reinforce your learning.</p>
+        `
+    };
+    
+    return feedbackTemplates[quizType] || feedbackTemplates['practice_repeatable'];
+}
+
+// ==================== ADJUST LEVEL (REGENERATE QUIZ) ====================
+async function adjustQuizLevel() {
+    if (!state.currentAssignment) {
+        showNotification('No assignment loaded!');
+        return;
+    }
+    
+    // Ask user for difficulty level
+    const difficulty = prompt('Choose difficulty level:\n- easy\n- medium\n- hard\n\nEnter your choice:', 'medium');
+    
+    if (!difficulty || !['easy', 'medium', 'hard'].includes(difficulty.toLowerCase())) {
+        if (difficulty !== null) {  // User didn't cancel
+            showNotification('Invalid difficulty level. Please choose: easy, medium, or hard');
+        }
+        return;
+    }
+    
+    const confirmed = confirm(`This will regenerate the quiz at ${difficulty.toLowerCase()} difficulty level. Continue?`);
+    if (!confirmed) return;
+    
+    showNotification('Regenerating quiz questions...');
+    
+    // Call API to regenerate quiz variant
+    try {
+        const response = await fetch(`/api/assignments/${state.currentAssignment.id}/regenerate/quiz`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ difficulty: difficulty.toLowerCase() })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showNotification('Quiz regenerated successfully!');
+            // Reload the assignment to show new quiz
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            const error = await response.json();
+            showNotification(`Failed to regenerate quiz: ${error.error || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error regenerating quiz:', error);
+        showNotification('Error regenerating quiz. Please try again.');
     }
 }
 

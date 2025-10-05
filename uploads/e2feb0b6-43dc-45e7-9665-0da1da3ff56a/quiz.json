@@ -1,0 +1,102 @@
+{
+  "summary": "Practice problems to master the concepts of factoring, perfect squares/cubes, synthetic division, and polynomials.",
+  "quiz_type": "practice",
+  "questions": [
+    {
+      "question": "Factor the quadratic expression: x\u00b2 + 9x + 18",
+      "difficulty": "easy",
+      "solution": "We need two numbers that multiply to 18 and add up to 9. These numbers are 3 and 6. So, the factored form is (x + 3)(x + 6).",
+      "common_mistakes": [
+        "Incorrectly identifying factors that multiply to the constant term but don't add to the middle term.",
+        "Sign errors (e.g., using -3 and -6)."
+      ]
+    },
+    {
+      "question": "Factor the expression using the difference of squares formula: 25y\u00b2 - 49",
+      "difficulty": "medium",
+      "solution": "Recognize this as a\u00b2 - b\u00b2 = (a - b)(a + b). Here, a = \u221a(25y\u00b2) = 5y and b = \u221a49 = 7. So, the factored form is (5y - 7)(5y + 7).",
+      "common_mistakes": [
+        "Not recognizing the difference of squares pattern.",
+        "Incorrectly taking the square root of the terms (e.g., 25y instead of 5y).",
+        "Sign errors in the factored form."
+      ]
+    },
+    {
+      "question": "Factor by grouping: 2x\u00b3 + 4x\u00b2 - 3x - 6",
+      "difficulty": "hard",
+      "solution": "Group the first two terms and the last two terms: (2x\u00b3 + 4x\u00b2) + (-3x - 6). Factor out the greatest common factor from each group: 2x\u00b2(x + 2) - 3(x + 2). Now, factor out the common binomial (x + 2): (x + 2)(2x\u00b2 - 3).",
+      "common_mistakes": [
+        "Incorrectly factoring out GCFs from each group, especially sign errors in the second group.",
+        "Not recognizing the common binomial factor."
+      ]
+    },
+    {
+      "question": "Simplify the expression: \u221a(81) + \u00b3\u221a(64)",
+      "difficulty": "easy",
+      "solution": "The square root of 81 is 9 (since 9\u00b2 = 81). The cube root of 64 is 4 (since 4\u00b3 = 64). So, 9 + 4 = 13.",
+      "common_mistakes": [
+        "Confusing square roots and cube roots.",
+        "Calculation errors for roots."
+      ]
+    },
+    {
+      "question": "What constant term should be added to x\u00b2 - 12x to make it a perfect square trinomial?",
+      "difficulty": "medium",
+      "solution": "For a perfect square trinomial x\u00b2 + bx + c, the constant term c is (b/2)\u00b2. Here, b = -12. So, c = (-12/2)\u00b2 = (-6)\u00b2 = 36. The trinomial would be x\u00b2 - 12x + 36 = (x - 6)\u00b2.",
+      "common_mistakes": [
+        "Forgetting to square the (b/2) term.",
+        "Sign errors when calculating b/2 (though squaring makes it positive anyway for this specific case).",
+        "Incorrectly calculating (b/2)\u00b2."
+      ]
+    },
+    {
+      "question": "Use synthetic division to divide (x\u00b3 - 5x\u00b2 + 3x + 9) by (x - 3).",
+      "difficulty": "medium",
+      "solution": "The divisor is (x - 3), so k = 3. Set up synthetic division with coefficients 1, -5, 3, 9. Bring down 1. Multiply 1 by 3, get 3. Add to -5, get -2. Multiply -2 by 3, get -6. Add to 3, get -3. Multiply -3 by 3, get -9. Add to 9, get 0. The quotient is x\u00b2 - 2x - 3 with a remainder of 0.",
+      "common_mistakes": [
+        "Using k = -3 instead of k = 3.",
+        "Arithmetic errors during the multiplication and addition steps.",
+        "Incorrectly writing the quotient from the resulting coefficients."
+      ]
+    },
+    {
+      "question": "Given that (x+2) is a factor of P(x) = x\u00b3 + x\u00b2 - 4x - 4, use synthetic division to find the other factors.",
+      "difficulty": "hard",
+      "solution": "Since (x+2) is a factor, k = -2. Use synthetic division with coefficients 1, 1, -4, -4. Bring down 1. Multiply 1 by -2, get -2. Add to 1, get -1. Multiply -1 by -2, get 2. Add to -4, get -2. Multiply -2 by -2, get 4. Add to -4, get 0. The quotient is x\u00b2 - x - 2. Now factor this quadratic: (x - 2)(x + 1). So, the factors are (x + 2), (x - 2), and (x + 1).",
+      "common_mistakes": [
+        "Sign error for k (using 2 instead of -2).",
+        "Not fully factoring the resulting quadratic expression.",
+        "Arithmetic errors in synthetic division."
+      ]
+    },
+    {
+      "question": "Identify the degree and the leading coefficient of the polynomial: P(x) = 7x\u2075 - 2x\u00b3 + x - 10.",
+      "difficulty": "easy",
+      "solution": "The degree of a polynomial is the highest exponent of the variable, which is 5. The leading coefficient is the coefficient of the term with the highest exponent, which is 7.",
+      "common_mistakes": [
+        "Confusing the degree with the number of terms.",
+        "Identifying a coefficient of a lower-degree term as the leading coefficient."
+      ]
+    },
+    {
+      "question": "Multiply the polynomials: (3x - 1)(x\u00b2 + 2x - 5).",
+      "difficulty": "medium",
+      "solution": "Distribute each term from the first polynomial to the second: 3x(x\u00b2 + 2x - 5) - 1(x\u00b2 + 2x - 5). This becomes (3x\u00b3 + 6x\u00b2 - 15x) + (-x\u00b2 - 2x + 5). Combine like terms: 3x\u00b3 + (6x\u00b2 - x\u00b2) + (-15x - 2x) + 5 = 3x\u00b3 + 5x\u00b2 - 17x + 5.",
+      "common_mistakes": [
+        "Errors in distributive property (missing terms or incorrect multiplication).",
+        "Sign errors when distributing negative terms.",
+        "Incorrectly combining like terms."
+      ]
+    },
+    {
+      "question": "Find all real roots of the polynomial P(x) = x\u00b3 - 2x\u00b2 - 5x + 6. (Hint: Test integer factors of the constant term).",
+      "difficulty": "hard",
+      "solution": "The constant term is 6. Possible rational roots (p/q) are factors of 6: \u00b11, \u00b12, \u00b13, \u00b16. Test P(1): 1 - 2 - 5 + 6 = 0. So, x=1 is a root, and (x-1) is a factor. Use synthetic division with k=1 on coefficients 1, -2, -5, 6. Result: 1, -1, -6, 0. The quotient is x\u00b2 - x - 6. Factor this quadratic: (x - 3)(x + 2). So, the roots are x = 1, x = 3, and x = -2.",
+      "common_mistakes": [
+        "Not systematically testing factors of the constant term.",
+        "Errors in synthetic division.",
+        "Not fully factoring the resulting quadratic to find all roots."
+      ]
+    }
+  ]
+}

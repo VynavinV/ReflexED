@@ -25,13 +25,26 @@ class AssignmentService:
             raise ValueError("GOOGLE_GEMINI_API_KEY must be set")
 
         genai.configure(api_key=api_key)
-        # Use gemini-2.5-flash for best performance and lower latency
-        self.model = genai.GenerativeModel(
+        
+        # Create separate models for each variant type with optimized configs
+        self.model_simplified = genai.GenerativeModel(
             "gemini-2.5-flash",
-            generation_config={
-                "temperature": 0.7,
-                "max_output_tokens": 2048,
-            }
+            generation_config={"temperature": 0.5, "max_output_tokens": 2048}
+        )
+        
+        self.model_audio = genai.GenerativeModel(
+            "gemini-2.5-flash",
+            generation_config={"temperature": 0.8, "max_output_tokens": 8192}
+        )
+        
+        self.model_visual = genai.GenerativeModel(
+            "gemini-2.5-flash",
+            generation_config={"temperature": 0.7, "max_output_tokens": 8192}
+        )
+        
+        self.model_quiz = genai.GenerativeModel(
+            "gemini-2.5-flash",
+            generation_config={"temperature": 0.6, "max_output_tokens": 4096}
         )
         self.upload_root = upload_root or os.path.abspath(Config.UPLOAD_FOLDER)
         os.makedirs(self.upload_root, exist_ok=True)
@@ -68,6 +81,60 @@ class AssignmentService:
             raise
 
         return assignment
+
+    def regenerate_variant(self, *, assignment: Assignment, variant_type: str, difficulty: str = 'medium') -> AssignmentVersion:
+        """Regenerate a specific variant (e.g., quiz) with adjusted difficulty."""
+        print(f"🔄 Regenerating {variant_type} variant for assignment {assignment.id} with difficulty={difficulty}")
+        
+        # Extract base text
+        text_parts = []
+        if assignment.original_content:
+            text_parts.append(assignment.original_content.strip())
+        if assignment.file_path:
+            file_text = extract_text(assignment.file_path)
+            if file_text:
+                text_parts.append(file_text.strip())
+        
+        base_text = "\n\n".join(text_parts) if text_parts else None
+        if not base_text:
+            raise ValueError("No content found in assignment")
+        
+        # Truncate very long texts
+        if len(base_text) > 4000:
+            base_text = base_text[:4000] + "\n\n[Content truncated for processing]"
+        
+        # Assignment directory
+        a_dir = os.path.join(self.upload_root, assignment.id)
+        os.makedirs(a_dir, exist_ok=True)
+        
+        # Find existing variant version to update
+        existing_version = AssignmentVersion.query.filter_by(
+            assignment_id=assignment.id,
+            variant_type=variant_type
+        ).first()
+        
+        if variant_type == 'quiz':
+            # Generate new quiz with difficulty parameter
+            print(f"🧠 Generating new quiz with difficulty={difficulty}...")
+            quiz = self._gen_quiz(assignment.subject, base_text, difficulty=difficulty)
+            quiz_path = self._write_json(quiz, os.path.join(a_dir, f'quiz_{difficulty}.json'))
+            
+            if existing_version:
+                # Update existing version
+                existing_version.content_text = json.dumps(quiz, ensure_ascii=False)
+                existing_version.assets = json.dumps({'quiz_json': quiz_path}, ensure_ascii=False)
+                db.session.commit()
+                print(f"✅ Quiz variant updated with difficulty={difficulty}")
+                return existing_version
+            else:
+                # Create new version
+                return self._persist_variant(
+                    assignment, 'quiz', assignment.subject,
+                    content_text=json.dumps(quiz, ensure_ascii=False),
+                    assets={'quiz_json': quiz_path}
+                )
+        else:
+            raise ValueError(f"Regeneration not supported for variant type: {variant_type}")
 
     # ------------- Variant Generation -------------
     def _generate_all_variants(self, assignment: Assignment):
@@ -107,37 +174,84 @@ class AssignmentService:
         )
         print("✅ Simplified text variant created")
 
-        # Audio Guide (script + mp3)
+        # Audio Guide (podcast discussion with 2 voices)
         print("🎵 Generating audio script variant...")
         audio = self._gen_audio_script(assignment.subject, base_text)
-        # Convert script to string if it's a list/dict
-        raw_script = audio.get('script', '')
-        if isinstance(raw_script, list):
-            # If it's a list of script segments, extract text and join
-            script_text = ' '.join(seg.get('text', str(seg)) if isinstance(seg, dict) else str(seg) for seg in raw_script)
-        elif isinstance(raw_script, dict):
-            script_text = raw_script.get('text', json.dumps(raw_script, ensure_ascii=False))
-        else:
-            script_text = str(raw_script)
         
-        print("🔊 Synthesizing audio...")
-        audio_mp3 = self._synthesize_audio(script_text, out_dir=a_dir, name='narration.mp3')
-        # Store the script text for display
+        # Process discussion format
+        discussion = audio.get('discussion', [])
+        if discussion and isinstance(discussion, list):
+            print(f"🎙️ Creating podcast discussion with {len(discussion)} segments...")
+            audio_mp3 = self._synthesize_podcast(discussion, out_dir=a_dir, name='podcast.mp3')
+        else:
+            # Fallback to simple narration
+            script_text = audio.get('script', str(audio))
+            if isinstance(script_text, dict):
+                script_text = json.dumps(script_text, ensure_ascii=False)
+            print("🔊 Synthesizing single-voice audio...")
+            audio_mp3 = self._synthesize_audio(str(script_text), out_dir=a_dir, name='narration.mp3')
+        
+        # Store the complete data
         self._persist_variant(
             assignment, 'audio', assignment.subject,
-            content_text=script_text, assets={'audio_mp3': audio_mp3, 'captions_vtt': audio.get('captions_vtt')}
+            content_text=json.dumps(audio, ensure_ascii=False),
+            assets={'audio_mp3': audio_mp3, 'summary': audio.get('summary', 'Educational podcast discussion')}
         )
         print("✅ Audio variant created")
 
-        # Visualized Lesson (Manim)
+        # Visualized Lesson (Manim with narration)
         print("🎬 Generating visual/Manim variant...")
-        visual = self._gen_visual_plan(assignment.subject, base_text)
-        video_mp4, manim_script = self._render_manim(visual.get('manim_code', ''), out_dir=a_dir, name='visual.mp4')
-        # Store the full description/plan as text
-        visual_text = visual.get('description', '') or visual.get('manim_code', '')
+        
+        # Try up to 2 times to generate a valid visual plan and video
+        video_mp4 = None
+        manim_script = None
+        narration_audio = None
+        
+        for attempt in range(2):
+            print(f"🎬 Visual generation attempt {attempt + 1}/2...")
+            
+            visual = self._gen_visual_plan(assignment.subject, base_text)
+            
+            # Generate narration audio from the visual plan
+            narration_segments = visual.get('narration', [])
+            if narration_segments and isinstance(narration_segments, list):
+                print(f"🎤 Generating narration audio from {len(narration_segments)} segments...")
+                # Combine all narration text
+                full_narration = ' '.join(seg.get('text', '') for seg in narration_segments)
+                narration_audio = self._synthesize_audio(full_narration, out_dir=a_dir, name='narration.mp3')
+            
+            # Render Manim video
+            video_mp4, manim_script, success = self._render_manim(
+                visual.get('manim_code', ''), 
+                out_dir=a_dir, 
+                name='visual_silent.mp4'
+            )
+            
+            # Check if we got a valid video (not a placeholder)
+            if success and os.path.exists(video_mp4) and os.path.getsize(video_mp4) > 10000:
+                print(f"✅ Valid video generated on attempt {attempt + 1}")
+                break
+            else:
+                print(f"⚠️ Attempt {attempt + 1} failed, {'retrying with new script' if attempt < 1 else 'using placeholder'}...")
+                if attempt == 1:  # Last attempt
+                    break
+        
+        # Combine video with narration audio (only if we have a valid video)
+        final_video = video_mp4
+        if narration_audio and os.path.exists(narration_audio):
+            # Check if video is valid (not tiny placeholder)
+            if os.path.exists(video_mp4) and os.path.getsize(video_mp4) > 10000:
+                print("🎬 Combining video with narration audio...")
+                final_video = self._add_audio_to_video(video_mp4, narration_audio, out_dir=a_dir, name='visual.mp4')
+            else:
+                print("⚠️ Video is placeholder, skipping audio combination. Using narration.mp3 separately.")
+                final_video = video_mp4  # Keep placeholder video
+        
+        # Store the complete visual data including narration
         self._persist_variant(
             assignment, 'visual', assignment.subject,
-            content_text=visual_text, assets={'video_mp4': video_mp4, 'manim_script': manim_script}
+            content_text=json.dumps(visual, ensure_ascii=False),
+            assets={'video_mp4': final_video, 'manim_script': manim_script, 'narration_audio': narration_audio or ''}
         )
         print("✅ Visual variant created")
 
@@ -154,12 +268,14 @@ class AssignmentService:
         print(f"🎉 All variants generated for assignment {assignment.id}")
 
     # ------------- Gemini Prompts -------------
-    def _call_gemini_with_retry(self, prompt: str, max_retries: int = 2) -> str:
+    def _call_gemini_with_retry(self, prompt: str, model=None, max_retries: int = 2) -> str:
         """Call Gemini with retry logic for timeout errors."""
+        if model is None:
+            model = self.model_simplified
         print(f"🤖 Calling Gemini API (attempt 1/{max_retries})...")
         for attempt in range(max_retries):
             try:
-                resp = self.model.generate_content(prompt)
+                resp = model.generate_content(prompt)
                 
                 # Handle both simple and complex (multi-part) responses
                 try:
@@ -188,7 +304,7 @@ class AssignmentService:
     def _gen_simplified_text(self, subject: str, text: str) -> Dict:
         print(f"📝 Creating simplified text for {subject}...")
         prompt = f"Simplify the following {subject} lesson for a grade 5 reader. Output JSON with keys: text, highlights (array of key points). Text should be concise and clear.\n\nLESSON:\n{text[:2000]}"
-        resp_text = self._call_gemini_with_retry(prompt)
+        resp_text = self._call_gemini_with_retry(prompt, model=self.model_simplified)
         result = self._parse_json(resp_text, fallback_keys={'text': text, 'highlights': []})
         print(f"📝 Simplified text generated: {len(result.get('text', ''))} chars")
         return result
@@ -196,48 +312,202 @@ class AssignmentService:
     def _gen_audio_script(self, subject: str, text: str) -> Dict:
         print(f"🎵 Creating audio script for {subject}...")
         prompt = (
-            f"Write a brief voiceover script for an {subject} lesson (90 seconds max). "
-            f"Output JSON with keys: script (string), captions_vtt.\n\nLESSON:\n{text[:2000]}"
+            'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+            'Create an educational podcast discussion between a Host and an Expert about the following lesson. '
+            'The discussion should have 6-10 dialogue exchanges that help students understand the material. '
+            'Make it engaging and conversational.\n\n'
+            'Use this EXACT format:\n'
+            '{\n'
+            '  "summary": "Brief description of the podcast",\n'
+            '  "discussion": [\n'
+            '    {"speaker": "Host", "text": "Welcome to our lesson on..."},\n'
+            '    {"speaker": "Expert", "text": "Thanks! Let me explain..."},\n'
+            '    {"speaker": "Host", "text": "That\'s interesting. Can you elaborate?"},\n'
+            '    {"speaker": "Expert", "text": "Of course. Here\'s an example..."}\n'
+            '  ]\n'
+            '}\n\n'
+            f'LESSON:\n{text[:2500]}\n\n'
+            'Each speaker should have 2-4 sentences per turn. '
+            'Host asks questions and summarizes. Expert explains with examples.\n\n'
+            "Return ONLY the JSON object."
         )
-        resp_text = self._call_gemini_with_retry(prompt)
-        result = self._parse_json(resp_text, fallback_keys={'script': text, 'captions_vtt': None})
-        print(f"🎵 Audio script generated: {len(result.get('script', ''))} chars")
+        resp_text = self._call_gemini_with_retry(prompt, model=self.model_audio)
+        result = self._parse_json(resp_text, fallback_keys={'discussion': [{'speaker': 'Host', 'text': text[:500]}], 'summary': 'Educational podcast discussion'})
+        print(f"🎵 Audio script generated: {len(result.get('discussion', []))} dialogue segments")
         return result
 
     def _gen_visual_plan(self, subject: str, text: str) -> Dict:
         print(f"🎬 Creating visual plan for {subject}...")
         prompt = (
-            f"Create a Manim animation plan for teaching {subject}. "
-            f"Return JSON with:\n"
-            f"- description: A detailed 2-3 sentence explanation of what the animation will show\n"
-            f"- manim_code: Complete Python code using Manim library to create the animation\n\n"
-            f"LESSON CONTENT:\n{text[:2000]}\n\n"
-            f"Make the description educational and explain what visual concepts will be shown."
+            "Return ONLY valid JSON. Create an educational video plan with narration and Manim code.\\n\\n"
+            f"Subject: {subject}\\n"
+            f"Content: {text[:2000]}\\n\\n"
+            "IMPORTANT: Use only Text() for all text elements. DO NOT use MathTex, Tex, or LaTeX.\\n"
+            "For math formulas, write them as plain text strings.\\n\\n"
+            "JSON format:\\n"
+            "{\\n"
+            '  "description": "2-sentence overview",\\n'
+            '  "narration": [\\n'
+            '    {"text": "Opening", "duration": 10},\\n'
+            '    {"text": "Main point", "duration": 12}\\n'
+            "  ],\\n"
+            '  "manim_code": "from manim import *\\\\nclass Lesson(Scene):\\\\n  def construct(self):\\\\n    title=Text(\'Title\', font_size=48)\\\\n    self.play(Write(title))\\\\n    self.wait(2)\\\\n    self.play(FadeOut(title))"\\n'
+            "}\\n\\n"
+            "Requirements: 3-5 narration segments, complete Manim code using ONLY Text() objects, 40-60 seconds total.\\n"
+            "Example: Text('x^2 + 5x + 6') instead of MathTex('x^2 + 5x + 6')\\n"
+            "Return ONLY JSON."
         )
-        resp_text = self._call_gemini_with_retry(prompt)
+        resp_text = self._call_gemini_with_retry(prompt, model=self.model_visual)
         result = self._parse_json(resp_text, fallback_keys={
             'description': f'Visual animation for {subject} lesson based on the provided content.',
+            'narration': [{'text': text[:200], 'duration': 10}],
             'manim_code': self._default_manim_code(text)
         })
-        
-        # Ensure description exists and is meaningful
-        description = result.get('description', '')
-        if not description or len(description) < 20:
-            description = f"This visual lesson uses animations to illustrate key concepts from the {subject} material. The animation breaks down complex ideas into clear, step-by-step visual explanations."
-            result['description'] = description
-        
-        print(f"🎬 Visual plan generated: {len(description)} chars description, {len(result.get('manim_code', ''))} chars code")
+        print(f"🎬 Visual plan generated: {len(result.get('description', ''))} chars description, {len(result.get('manim_code', ''))} chars code")
         return result
 
-    def _gen_quiz(self, subject: str, text: str) -> Dict:
-        print(f"🧠 Creating quiz for {subject}...")
-        prompt = (
-            f"Create a 5-question quiz for {subject}. "
-            f"Output JSON with keys: summary, questions (array with question, options, answer, hint).\n\nLESSON:\n{text[:2000]}"
-        )
-        resp_text = self._call_gemini_with_retry(prompt)
-        result = self._parse_json(resp_text, fallback_keys={'summary': 'Quick check', 'questions': []})
-        print(f"🧠 Quiz generated: {len(result.get('questions', []))} questions")
+    def _gen_quiz(self, subject: str, text: str, difficulty: str = 'medium') -> Dict:
+        print(f"🧠 Creating quiz for {subject} with difficulty={difficulty}...")
+        
+        # Add difficulty context to prompts
+        difficulty_context = {
+            'easy': 'Focus on basic concepts and straightforward questions. Make problems simple and clear.',
+            'medium': 'Include a mix of straightforward and moderately challenging questions.',
+            'hard': 'Include complex scenarios and multi-step problems that require deeper thinking.'
+        }
+        diff_instruction = difficulty_context.get(difficulty, difficulty_context['medium'])
+        
+        # Retry up to 2 times if JSON parsing fails
+        max_retries = 2
+        
+        # Subject-specific quiz formats
+        quiz_formats = {
+            'language': {
+                'type': 'socratic',
+                'instruction': (
+                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    f'{diff_instruction}\n\n'
+                    'Create 5-7 Socratic questions to guide student learning about the language concepts. '
+                    'Include guidance hints and follow-up prompts.\n\n'
+                    'Use this EXACT format:\n'
+                    '{\n'
+                    '  "summary": "Guided questions to help you learn",\n'
+                    '  "quiz_type": "socratic",\n'
+                    '  "questions": [\n'
+                    '    {"question": "What do you notice about...", "guidance": "Think about how...", "follow_up": "Now consider..."},\n'
+                    '    {"question": "How would you explain...", "guidance": "Look at the pattern...", "follow_up": "Can you apply this..."}\n'
+                    '  ]\n'
+                    '}\n\n'
+                    "Return ONLY the JSON object."
+                )
+            },
+            'math': {
+                'type': 'practice',
+                'instruction': (
+                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    f'{diff_instruction}\n\n'
+                    'Create 8-10 practice math problems with varying difficulty levels (easy, medium, hard). '
+                    'Include step-by-step solutions and common mistakes to avoid.\n\n'
+                    'Use this EXACT format:\n'
+                    '{\n'
+                    '  "summary": "Practice problems to master the concepts",\n'
+                    '  "quiz_type": "practice",\n'
+                    '  "questions": [\n'
+                    '    {"question": "Solve for x: 2x + 5 = 13", "difficulty": "easy", "solution": "Subtract 5: 2x = 8, then divide by 2: x = 4", "common_mistakes": ["Forgetting to subtract from both sides", "Division errors"]},\n'
+                    '    {"question": "Find the area of a circle with radius 7cm", "difficulty": "medium", "solution": "Use A = πr². A = π(7)² = 49π ≈ 153.94 cm²", "common_mistakes": ["Using diameter instead of radius", "Forgetting to square the radius"]}\n'
+                    '  ]\n'
+                    '}\n\n'
+                    "Return ONLY the JSON object."
+                )
+            },
+            'science': {
+                'type': 'practice_repeatable',
+                'instruction': (
+                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    f'{diff_instruction}\n\n'
+                    'Create 8-10 science practice questions that can be repeated for mastery. '
+                    'Include detailed explanations and real-world applications.\n\n'
+                    'Use this EXACT format:\n'
+                    '{\n'
+                    '  "summary": "Practice questions to build understanding",\n'
+                    '  "quiz_type": "practice_repeatable",\n'
+                    '  "questions": [\n'
+                    '    {"question": "What is photosynthesis?", "answer": "The process plants use to convert light energy into chemical energy", "explanation": "Plants use chlorophyll to capture sunlight and convert CO2 and water into glucose and oxygen", "real_world_example": "This is how plants produce oxygen for us to breathe"},\n'
+                    '    {"question": "Why does ice float on water?", "answer": "Ice is less dense than liquid water", "explanation": "Water molecules form a crystalline structure when frozen, creating more space between molecules", "real_world_example": "This allows fish to survive winter in frozen ponds"}\n'
+                    '  ]\n'
+                    '}\n\n'
+                    "Return ONLY the JSON object."
+                )
+            },
+            'history': {
+                'type': 'timeline_fill',
+                'instruction': (
+                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    f'{diff_instruction}\n\n'
+                    'Create a timeline and famous names fill-in-the-blank exercise for history. '
+                    'Include dates, events, and key historical figures. Use ___ for blanks.\n\n'
+                    'Use this EXACT format:\n'
+                    '{\n'
+                    '  "summary": "Timeline and key figures to memorize",\n'
+                    '  "quiz_type": "timeline_fill",\n'
+                    '  "timeline_events": [\n'
+                    '    {"year": "1776", "event_description": "The ___ of Independence was signed", "answer": "Declaration"},\n'
+                    '    {"year": "1945", "event_description": "___ ended with the defeat of Nazi Germany", "answer": "World War II"}\n'
+                    '  ],\n'
+                    '  "famous_people": [\n'
+                    '    {"description": "___ led the civil rights movement", "answer": "Martin Luther King Jr.", "significance": "Fought for racial equality through nonviolent protest"},\n'
+                    '    {"description": "___ discovered America in 1492", "answer": "Christopher Columbus", "significance": "Opened European exploration of the Americas"}\n'
+                    '  ]\n'
+                    '}\n\n'
+                    "Return ONLY the JSON object."
+                )
+            },
+            'geography': {
+                'type': 'practice_repeatable',
+                'instruction': (
+                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    'Create 8-10 geography practice questions that can be repeated for mastery. '
+                    'Include maps, locations, features, and facts.\n\n'
+                    'Use this EXACT format:\n'
+                    '{\n'
+                    '  "summary": "Practice questions to learn geography",\n'
+                    '  "quiz_type": "practice_repeatable",\n'
+                    '  "questions": [\n'
+                    '    {"question": "What is the capital of France?", "answer": "Paris", "hint": "This city is known for the Eiffel Tower", "interesting_fact": "Paris is called the City of Light"},\n'
+                    '    {"question": "Which river is the longest in the world?", "answer": "The Nile River", "hint": "It flows through Egypt", "interesting_fact": "The Nile is about 6,650 km long"}\n'
+                    '  ]\n'
+                    '}\n\n'
+                    "Return ONLY the JSON object."
+                )
+            }
+        }
+        
+        # Get subject-specific format or use default
+        quiz_format = quiz_formats.get(subject.lower(), {
+            'type': 'standard',
+            'instruction': f'Create a 5-question quiz for {subject}. Output JSON with keys: summary, quiz_type: "standard", questions (array with question, options, answer, hint).'
+        })
+        
+        prompt = f"{quiz_format['instruction']}\n\nLESSON CONTENT:\n{text[:3000]}"
+        
+        # Try up to max_retries times if JSON parsing fails
+        for attempt in range(max_retries):
+            resp_text = self._call_gemini_with_retry(prompt, model=self.model_quiz)
+            result = self._parse_json(resp_text, fallback_keys={
+                'summary': f'{subject} practice exercise',
+                'quiz_type': quiz_format['type'],
+                'questions': []
+            })
+            
+            # Check if we got valid questions
+            question_count = len(result.get('questions', result.get('timeline_events', [])))
+            if question_count > 0:
+                print(f"🧠 Quiz generated: {quiz_format['type']} format with {question_count} items")
+                return result
+            else:
+                print(f"⚠️ Quiz attempt {attempt + 1}/{max_retries} failed (0 questions), {'retrying...' if attempt < max_retries - 1 else 'using fallback'}")
+        
+        print(f"🧠 Quiz generated: {quiz_format['type']} format with 0 items (fallback)")
         return result
 
     # ------------- Synthesis/Rendering -------------
@@ -287,8 +557,81 @@ class AssignmentService:
                 f.write(minimal_mp3)
         return out_path
 
-    def _render_manim(self, manim_code: str, out_dir: str, name: str) -> Tuple[str, str]:
-        """Write Manim code to file and render it using Manim CLI."""
+    def _synthesize_podcast(self, discussion: list, out_dir: str, name: str) -> str:
+        """Synthesize multi-voice podcast from discussion array."""
+        print(f"🎙️ Synthesizing podcast: {len(discussion)} dialogue segments")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, name)
+        
+        try:
+            if Config.ELEVENLABS_API_KEY and discussion:
+                print("🎤 Creating multi-voice podcast with ElevenLabs...")
+                from elevenlabs.client import ElevenLabs
+                from pydub import AudioSegment
+                
+                client = ElevenLabs(api_key=Config.ELEVENLABS_API_KEY)
+                
+                # Voice mapping
+                voices = {
+                    "Host": "EXAVITQu4vr4xnSDxMaL",     # Sarah - clear, professional
+                    "Expert": "JBFqnCBsd6RMkjVDRZzb"    # George - warm, explanatory
+                }
+                
+                # Generate audio for each dialogue segment
+                audio_segments = []
+                for i, segment in enumerate(discussion):
+                    speaker = segment.get('speaker', 'Host')
+                    text = segment.get('text', '')
+                    voice_id = voices.get(speaker, voices["Host"])
+                    
+                    print(f"  Segment {i+1}/{len(discussion)}: {speaker} ({len(text)} chars)")
+                    
+                    # Generate audio
+                    audio_generator = client.text_to_speech.convert(
+                        text=text[:1000],  # Limit per segment
+                        voice_id=voice_id,
+                        model_id="eleven_multilingual_v2",
+                        output_format="mp3_44100_128",
+                    )
+                    
+                    # Collect audio bytes
+                    audio_bytes = b''
+                    for chunk in audio_generator:
+                        audio_bytes += chunk
+                    
+                    # Convert to AudioSegment
+                    from io import BytesIO
+                    segment_audio = AudioSegment.from_mp3(BytesIO(audio_bytes))
+                    audio_segments.append(segment_audio)
+                    
+                    # Add pause between speakers (500ms)
+                    if i < len(discussion) - 1:
+                        pause = AudioSegment.silent(duration=500)
+                        audio_segments.append(pause)
+                
+                # Combine all segments
+                combined = audio_segments[0]
+                for seg in audio_segments[1:]:
+                    combined += seg
+                
+                # Export
+                combined.export(out_path, format="mp3")
+                file_size = os.path.getsize(out_path)
+                print(f"✅ Podcast synthesized: {file_size} bytes")
+            else:
+                # Fallback: single voice with all text
+                all_text = ' '.join(seg.get('text', '') for seg in discussion)
+                return self._synthesize_audio(all_text, out_dir, name)
+                
+        except Exception as e:
+            print(f"⚠️ Podcast synthesis failed: {e}, using fallback")
+            all_text = ' '.join(seg.get('text', '') for seg in discussion)
+            return self._synthesize_audio(all_text, out_dir, name)
+        
+        return out_path
+
+    def _render_manim(self, manim_code: str, out_dir: str, name: str) -> Tuple[str, str, bool]:
+        """Write Manim code to file and render it using Manim CLI. Returns (video_path, script_path, success)."""
         print(f"🎬 Rendering Manim animation: {len(manim_code)} chars of code")
         os.makedirs(out_dir, exist_ok=True)
         script_path = os.path.join(out_dir, 'scene.py')
@@ -331,10 +674,16 @@ class AssignmentService:
                         # Move to our desired location
                         import shutil
                         shutil.copy(src, video_path)
-                        print(f"✅ Manim video rendered successfully: {os.path.getsize(video_path)} bytes")
-                        return video_path, script_path
+                        file_size = os.path.getsize(video_path)
+                        print(f"✅ Manim video rendered successfully: {file_size} bytes")
+                        return video_path, script_path, True
             
-            print(f"⚠️ Manim rendering failed (code {result.returncode}): {result.stderr[:200]}")
+            # Check if error is due to missing LaTeX
+            if 'latex: command not found' in result.stderr or 'latex' in result.stderr.lower():
+                print("⚠️ Manim rendering failed: LaTeX not installed")
+                print("💡 Tip: Install LaTeX with: brew install --cask mactex-no-gui (macOS)")
+            else:
+                print(f"⚠️ Manim rendering failed (code {result.returncode}): {result.stderr[:200]}")
             print("📦 Creating fallback placeholder...")
             
         except subprocess.TimeoutExpired:
@@ -357,19 +706,95 @@ class AssignmentService:
                 f.write(minimal_mp4)
             print(f"✅ Placeholder video created: {video_path}")
         
-        return video_path, script_path
+        return video_path, script_path, False
+
+    def _add_audio_to_video(self, video_path: str, audio_path: str, out_dir: str, name: str) -> str:
+        """Combine video and audio using ffmpeg."""
+        import subprocess
+        
+        output_path = os.path.join(out_dir, name)
+        
+        # Check if video file is valid (not a tiny placeholder)
+        if not os.path.exists(video_path):
+            print(f"⚠️ Video file doesn't exist: {video_path}")
+            return video_path
+        
+        video_size = os.path.getsize(video_path)
+        if video_size < 10000:  # Less than 10KB = placeholder
+            print(f"⚠️ Video file too small ({video_size} bytes), likely placeholder. Skipping ffmpeg.")
+            return video_path
+        
+        try:
+            print(f"🎬 Combining video {video_path} ({video_size} bytes) with audio {audio_path}...")
+            
+            # Use ffmpeg to combine video and audio
+            # -i video.mp4 = input video
+            # -i audio.mp3 = input audio
+            # -c:v copy = copy video codec (no re-encoding)
+            # -c:a aac = encode audio as AAC
+            # -shortest = end when shortest stream ends
+            # -y = overwrite output file
+            result = subprocess.run([
+                'ffmpeg', '-y',
+                '-i', video_path,
+                '-i', audio_path,
+                '-c:v', 'copy',
+                '-c:a', 'aac',
+                '-shortest',
+                output_path
+            ], capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0 and os.path.exists(output_path):
+                file_size = os.path.getsize(output_path)
+                print(f"✅ Video and audio combined successfully: {file_size} bytes")
+                return output_path
+            else:
+                print(f"⚠️ ffmpeg failed (code {result.returncode}): {result.stderr[:200]}")
+                print("📦 Using original video without audio...")
+                return video_path
+                
+        except FileNotFoundError:
+            print("⚠️ ffmpeg not found. Install with: brew install ffmpeg (macOS) or apt-get install ffmpeg (Linux)")
+            print("📦 Using original video without audio...")
+            return video_path
+        except subprocess.TimeoutExpired:
+            print("⚠️ ffmpeg timed out, using original video...")
+            return video_path
+        except Exception as e:
+            print(f"⚠️ Error combining video and audio: {e}")
+            print("📦 Using original video without audio...")
+            return video_path
 
     # ------------- Helpers -------------
     def _parse_json(self, text: str, fallback_keys: Dict):
         import re, json as _json
-        cleaned = text or "{}"
-        m = re.search(r"```json\s*(.*?)\s*```", cleaned, re.DOTALL)
+        
+        if not text or not text.strip():
+            print("⚠️ Empty response from Gemini, using fallback")
+            return fallback_keys
+            
+        cleaned = text.strip()
+        
+        # Try to extract JSON from markdown code blocks
+        m = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, re.DOTALL)
         if m:
-            cleaned = m.group(1)
+            cleaned = m.group(1).strip()
+        
+        # Try to find JSON object in the text
+        if not cleaned.startswith('{'):
+            # Look for first { to last }
+            start = cleaned.find('{')
+            end = cleaned.rfind('}')
+            if start != -1 and end != -1:
+                cleaned = cleaned[start:end+1]
+        
         try:
             data = _json.loads(cleaned)
+            print(f"✅ Successfully parsed JSON with {len(str(data))} chars")
             return {**fallback_keys, **data}
-        except Exception:
+        except Exception as e:
+            print(f"⚠️ JSON parsing failed: {str(e)[:100]}, using fallback")
+            print(f"⚠️ Received text (first 200 chars): {text[:200]}")
             return fallback_keys
 
     def _default_manim_code(self, title: str) -> str:
