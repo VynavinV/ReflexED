@@ -376,6 +376,19 @@ body {
     border-color: var(--gray-400);
 }
 
+.btn-danger {
+    background: #DC2626;
+    color: var(--white);
+    border: 2px solid #DC2626;
+}
+
+.btn-danger:hover {
+    background: #B91C1C;
+    border-color: #B91C1C;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 .btn-large {
     padding: var(--spacing-lg) var(--spacing-xl);
     font-size: var(--font-size-lg);

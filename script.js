@@ -182,7 +182,7 @@ async function loadRecentLessons() {
             const timeText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago`;
             
             return `
-                <div class="lesson-item">
+                <div class="lesson-item" data-assignment-id="${a.id}">
                     <div class="lesson-info">
                         <span class="lesson-subject ${subjectClass}">${a.subject}</span>
                         <h3>${escapeHtml(a.title)}</h3>
@@ -190,6 +190,9 @@ async function loadRecentLessons() {
                     </div>
                     <div class="lesson-actions">
                         <button class="btn btn-outline btn-sm" onclick="viewAssignment('${a.id}')">View</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAssignment('${a.id}', event)" title="Delete this assignment">
+                            <span style="margin-right: 4px;">🗑️</span>Delete
+                        </button>
                     </div>
                 </div>
             `;
@@ -220,6 +223,54 @@ async function viewAssignment(assignmentId) {
     } catch (error) {
         console.error('Failed to view assignment:', error);
         alert('Error loading assignment');
+    }
+}
+
+async function deleteAssignment(assignmentId, event) {
+    // Prevent event bubbling
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    // Confirm deletion
+    const confirmed = confirm('Are you sure you want to delete this assignment? This action cannot be undone.');
+    if (!confirmed) return;
+    
+    try {
+        const response = await fetch(`/api/assignments/${assignmentId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            alert(`Failed to delete assignment: ${error.error || 'Unknown error'}`);
+            return;
+        }
+        
+        // Success - remove the item from the UI with animation
+        const lessonItem = document.querySelector(`[data-assignment-id="${assignmentId}"]`);
+        if (lessonItem) {
+            lessonItem.style.opacity = '0';
+            lessonItem.style.transform = 'translateX(-20px)';
+            lessonItem.style.transition = 'all 0.3s ease';
+            
+            setTimeout(() => {
+                lessonItem.remove();
+                
+                // Check if there are no more lessons
+                const lessonsList = document.querySelector('.lessons-list');
+                if (lessonsList && lessonsList.children.length === 0) {
+                    lessonsList.innerHTML = '<p style="text-align: center; color: var(--gray-600); padding: 40px;">No lessons created yet. Upload your first assignment above!</p>';
+                }
+            }, 300);
+        }
+        
+        // Show success message
+        showNotification('Assignment deleted successfully', 'success');
+        
+    } catch (error) {
+        console.error('Failed to delete assignment:', error);
+        alert('Error deleting assignment. Please try again.');
     }
 }
 
@@ -1754,7 +1805,10 @@ function submitQuizAnswer(questionId, quizType) {
 
 async function getAIFeedback(questionId, quizType) {
     const questionEl = document.querySelector(`.quiz-question[data-question-id="${questionId}"]`);
-    if (!questionEl) return;
+    if (!questionEl) {
+        console.error('Question element not found for ID:', questionId);
+        return;
+    }
     
     const answerEl = questionEl.querySelector('.student-answer');
     const feedbackEl = questionEl.querySelector('.feedback-area');
@@ -1763,6 +1817,69 @@ async function getAIFeedback(questionId, quizType) {
     if (!answer) {
         showNotification('Please enter an answer first!');
         return;
+    }
+    
+    // Get the correct answer from the current quiz data
+    let correctAnswer = null;
+    let questionData = null;
+    
+    console.log('Current assignment:', state.currentAssignment);
+    
+    if (state.currentAssignment && state.currentAssignment.versions) {
+        const quizVersion = state.currentAssignment.versions.find(v => v.variant_type === 'quiz');
+        console.log('Quiz version:', quizVersion);
+        
+        if (quizVersion) {
+            try {
+                const quizData = JSON.parse(quizVersion.content_text);
+                console.log('Quiz data:', quizData);
+                console.log('Question ID:', questionId);
+                
+                const questions = quizData.questions || [];
+                console.log('Questions array:', questions);
+                
+                questionData = questions[questionId];
+                console.log('Question data:', questionData);
+                
+                // Try multiple possible answer field names
+                if (questionData) {
+                    correctAnswer = questionData.answer || questionData.correct_answer;
+                    
+                    // If no answer field, try to extract from solution field
+                    if (!correctAnswer && questionData.solution) {
+                        // Try to extract answer from solution text
+                        // Common patterns: "So, the answer is X", "Therefore X", "= X", etc.
+                        const solution = questionData.solution;
+                        
+                        // Pattern 1: "So, the factored form is (x + 3)(x + 6)"
+                        let match = solution.match(/(?:So,?\s+(?:the\s+)?(?:answer|result|factored form|solution)\s+is\s+)(.+?)(?:\.|$)/i);
+                        
+                        // Pattern 2: "Therefore, x = 4"
+                        if (!match) {
+                            match = solution.match(/(?:Therefore,?\s+)(.+?)(?:\.|$)/i);
+                        }
+                        
+                        // Pattern 3: Last sentence or expression after "="
+                        if (!match) {
+                            const lastSentence = solution.split('.').filter(s => s.trim()).pop();
+                            match = lastSentence ? lastSentence.match(/=\s*(.+)$/) : null;
+                        }
+                        
+                        correctAnswer = match ? match[1].trim() : null;
+                    }
+                } else {
+                    correctAnswer = null;
+                }
+                
+                console.log('Correct answer:', correctAnswer);
+            } catch (e) {
+                console.error('Error parsing quiz data:', e);
+            }
+        } else {
+            console.warn('No quiz version found in assignment versions');
+        }
+    } else {
+        console.warn('No current assignment or versions available');
     }
     
     // Show loading state
@@ -1778,14 +1895,32 @@ async function getAIFeedback(questionId, quizType) {
     
     // Simulate AI feedback (replace with actual API call to Gemini)
     setTimeout(() => {
-        const feedback = generateAIFeedback(answer, quizType);
-        feedbackEl.style.background = 'var(--success-50)';
-        feedbackEl.style.borderLeft = '4px solid var(--success-500)';
+        const feedback = generateAIFeedback(answer, quizType, correctAnswer, questionData);
+        
+        // Determine if answer is correct
+        const isCorrect = correctAnswer ? checkAnswerCorrectness(answer, correctAnswer) : null;
+        
+        console.log('Answer check - Student:', answer, 'Correct:', correctAnswer, 'Is Correct:', isCorrect);
+        
+        // Style based on correctness
+        let bgColor = 'var(--gray-50)';
+        let borderColor = 'var(--gray-500)';
+        
+        if (isCorrect === true) {
+            bgColor = 'var(--success-50)';
+            borderColor = 'var(--success-500)';
+        } else if (isCorrect === false) {
+            bgColor = 'var(--warning-50)';
+            borderColor = 'var(--warning-500)';
+        }
+        
+        feedbackEl.style.background = bgColor;
+        feedbackEl.style.borderLeft = `4px solid ${borderColor}`;
         feedbackEl.innerHTML = `
             <div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                     <span style="font-size: 28px;">🤖</span>
-                    <h6 style="margin: 0; color: var(--success-700);">AI Feedback</h6>
+                    <h6 style="margin: 0; color: var(--gray-800);">AI Feedback</h6>
                 </div>
                 <div style="background: white; padding: 15px; border-radius: 6px; line-height: 1.6;">
                     ${feedback}
@@ -1795,27 +1930,95 @@ async function getAIFeedback(questionId, quizType) {
     }, 1500);
 }
 
-function generateAIFeedback(answer, quizType) {
-    // Placeholder AI feedback - integrate with Gemini API
-    const feedbackTemplates = {
-        'socratic': `
-            <p><strong>✓ Good thinking!</strong> Your response shows thoughtful consideration.</p>
-            <p><strong>💡 Suggestion:</strong> Try to elaborate more on the reasoning behind your answer. Consider the broader implications.</p>
-            <p><strong>🎯 Next Step:</strong> Think about how this concept connects to real-world applications.</p>
-        `,
-        'practice': `
-            <p><strong>✓ Nice work!</strong> Your approach is on the right track.</p>
-            <p><strong>📊 Analysis:</strong> The method you're using is correct. Make sure to show all steps clearly.</p>
-            <p><strong>💪 Tip:</strong> Double-check your calculations and verify the final answer.</p>
-        `,
-        'practice_repeatable': `
-            <p><strong>✓ Great effort!</strong> You're showing good understanding.</p>
-            <p><strong>🎓 Feedback:</strong> Your answer demonstrates comprehension of the key concept.</p>
-            <p><strong>🌟 Keep it up!</strong> Try the next question to reinforce your learning.</p>
-        `
-    };
+function checkAnswerCorrectness(studentAnswer, correctAnswer) {
+    if (!correctAnswer) return null;
     
-    return feedbackTemplates[quizType] || feedbackTemplates['practice_repeatable'];
+    // Normalize both answers for comparison
+    const normalize = (str) => str.toString().toLowerCase().trim()
+        .replace(/[^\w\s]/g, '') // Remove punctuation
+        .replace(/\s+/g, ' ');   // Normalize spaces
+    
+    const normalizedStudent = normalize(studentAnswer);
+    const normalizedCorrect = normalize(correctAnswer);
+    
+    // Exact match
+    if (normalizedStudent === normalizedCorrect) return true;
+    
+    // Check if student answer contains the correct answer (for longer responses)
+    if (normalizedStudent.includes(normalizedCorrect)) return true;
+    
+    // For numeric answers, check numerical equality
+    const studentNum = parseFloat(studentAnswer);
+    const correctNum = parseFloat(correctAnswer);
+    if (!isNaN(studentNum) && !isNaN(correctNum)) {
+        return Math.abs(studentNum - correctNum) < 0.01; // Allow small rounding errors
+    }
+    
+    return false;
+}
+
+function generateAIFeedback(answer, quizType, correctAnswer, questionData) {
+    // Check if answer is correct
+    const isCorrect = correctAnswer ? checkAnswerCorrectness(answer, correctAnswer) : null;
+    
+    // Generate feedback based on correctness and quiz type
+    if (quizType === 'socratic') {
+        // Socratic questions are open-ended, provide thoughtful feedback
+        return `
+            <p><strong>🤔 Thoughtful Response!</strong> You're engaging with the question meaningfully.</p>
+            <p><strong>💡 Consider:</strong> How does your answer connect to the broader concept? Can you think of examples that support your reasoning?</p>
+            <p><strong>🎯 Next Step:</strong> Try to elaborate on the implications of your answer. What real-world applications can you think of?</p>
+        `;
+    }
+    
+    if (isCorrect === true) {
+        // Answer is CORRECT
+        const correctFeedback = {
+            'practice': `
+                <p><strong>🎉 Excellent work!</strong> Your answer is correct!</p>
+                <p><strong>✓ You got it:</strong> ${escapeHtml(correctAnswer)}</p>
+                <p><strong>💪 Great job!</strong> You've demonstrated a solid understanding of this concept. Keep up the excellent work!</p>
+                ${questionData?.solution ? `<p><strong>📝 Solution approach:</strong> ${escapeHtml(questionData.solution)}</p>` : ''}
+            `,
+            'practice_repeatable': `
+                <p><strong>🎉 Perfect!</strong> Your answer is absolutely correct!</p>
+                <p><strong>✓ Correct answer:</strong> ${escapeHtml(correctAnswer)}</p>
+                <p><strong>🌟 Outstanding!</strong> You've mastered this concept. Ready for the next challenge?</p>
+                ${questionData?.explanation ? `<p><strong>� Why it's correct:</strong> ${escapeHtml(questionData.explanation)}</p>` : ''}
+            `
+        };
+        return correctFeedback[quizType] || correctFeedback['practice_repeatable'];
+        
+    } else if (isCorrect === false) {
+        // Answer is INCORRECT
+        const incorrectFeedback = {
+            'practice': `
+                <p><strong>🤔 Not quite right.</strong> Let's work through this together.</p>
+                <p><strong>❌ Your answer:</strong> ${escapeHtml(answer)}</p>
+                <p><strong>✓ Correct answer:</strong> ${escapeHtml(correctAnswer)}</p>
+                <p><strong>� Tip:</strong> Review the problem step-by-step. ${questionData?.common_mistakes ? `Common mistakes include: ${questionData.common_mistakes.join(', ')}.` : 'Make sure you understand each part before moving forward.'}</p>
+                ${questionData?.solution ? `<p><strong>📝 How to solve it:</strong> ${escapeHtml(questionData.solution)}</p>` : ''}
+                <p><strong>🔄 Try again!</strong> Understanding mistakes is a key part of learning.</p>
+            `,
+            'practice_repeatable': `
+                <p><strong>🤔 Not quite there yet.</strong> That's okay - learning takes practice!</p>
+                <p><strong>❌ Your answer:</strong> ${escapeHtml(answer)}</p>
+                <p><strong>✓ Correct answer:</strong> ${escapeHtml(correctAnswer)}</p>
+                ${questionData?.explanation ? `<p><strong>📚 Explanation:</strong> ${escapeHtml(questionData.explanation)}</p>` : ''}
+                ${questionData?.real_world_example ? `<p><strong>🌍 Real-world context:</strong> ${escapeHtml(questionData.real_world_example)}</p>` : ''}
+                <p><strong>💪 Keep trying!</strong> Review the explanation and give it another shot!</p>
+            `
+        };
+        return incorrectFeedback[quizType] || incorrectFeedback['practice_repeatable'];
+        
+    } else {
+        // No correct answer available (shouldn't happen often)
+        return `
+            <p><strong>📝 Your answer:</strong> ${escapeHtml(answer)}</p>
+            <p><strong>💡 Feedback:</strong> Your response shows engagement with the material. Keep thinking critically!</p>
+            <p><strong>🎯 Tip:</strong> Compare your answer with the provided solution to verify your understanding.</p>
+        `;
+    }
 }
 
 // ==================== ADJUST LEVEL (REGENERATE QUIZ) ====================

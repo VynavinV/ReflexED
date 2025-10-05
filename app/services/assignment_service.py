@@ -42,9 +42,15 @@ class AssignmentService:
             generation_config={"temperature": 0.7, "max_output_tokens": 8192}
         )
         
+        # Use gemini-2.0-flash-exp for quiz generation (better at structured output)
+        # Alternative: "gemini-1.5-pro" for even more reliability (but slower)
         self.model_quiz = genai.GenerativeModel(
-            "gemini-2.5-flash",
-            generation_config={"temperature": 0.6, "max_output_tokens": 4096}
+            "gemini-2.0-flash-exp",
+            generation_config={
+                "temperature": 0.3,  # Lower temperature for more consistent JSON
+                "max_output_tokens": 8192
+                # Note: response_mime_type not supported in current SDK version
+            }
         )
         self.upload_root = upload_root or os.path.abspath(Config.UPLOAD_FOLDER)
         os.makedirs(self.upload_root, exist_ok=True)
@@ -338,25 +344,47 @@ class AssignmentService:
 
     def _gen_visual_plan(self, subject: str, text: str) -> Dict:
         print(f"🎬 Creating visual plan for {subject}...")
-        prompt = (
-            "Return ONLY valid JSON. Create an educational video plan with narration and Manim code.\\n\\n"
-            f"Subject: {subject}\\n"
-            f"Content: {text[:2000]}\\n\\n"
-            "IMPORTANT: Use only Text() for all text elements. DO NOT use MathTex, Tex, or LaTeX.\\n"
-            "For math formulas, write them as plain text strings.\\n\\n"
-            "JSON format:\\n"
-            "{\\n"
-            '  "description": "2-sentence overview",\\n'
-            '  "narration": [\\n'
-            '    {"text": "Opening", "duration": 10},\\n'
-            '    {"text": "Main point", "duration": 12}\\n'
-            "  ],\\n"
-            '  "manim_code": "from manim import *\\\\nclass Lesson(Scene):\\\\n  def construct(self):\\\\n    title=Text(\'Title\', font_size=48)\\\\n    self.play(Write(title))\\\\n    self.wait(2)\\\\n    self.play(FadeOut(title))"\\n'
-            "}\\n\\n"
-            "Requirements: 3-5 narration segments, complete Manim code using ONLY Text() objects, 40-60 seconds total.\\n"
-            "Example: Text('x^2 + 5x + 6') instead of MathTex('x^2 + 5x + 6')\\n"
-            "Return ONLY JSON."
-        )
+        
+        # Create example with proper escaping
+        example_code = r"from manim import *\n\nclass PolynomialLesson(Scene):\n    def construct(self):\n        title = Text('Graphing Polynomials', font_size=52, color=BLUE)\n        title.to_edge(UP)\n        self.play(Write(title))\n        self.wait(2)\n        \n        eq1 = Text('f(x) = x^2', font_size=40, color=YELLOW)\n        eq1.shift(UP)\n        self.play(FadeIn(eq1))\n        self.wait(3)\n        \n        self.play(FadeOut(eq1))\n        eq2 = Text('f(x) = x^3 - 2x', font_size=40, color=GREEN)\n        self.play(FadeIn(eq2))\n        self.wait(3)\n        \n        self.play(FadeOut(eq2))\n        summary = Text('Higher degrees = More curves!', font_size=36, color=RED)\n        self.play(Write(summary))\n        self.wait(2)\n        self.play(FadeOut(summary), FadeOut(title))"
+        
+        prompt = f"""CRITICAL INSTRUCTIONS:
+1. Return ONLY valid JSON - no markdown, no code blocks, no explanations
+2. Do NOT wrap the JSON in ```json or ``` markers  
+3. Do NOT include trailing commas
+4. Start with {{ and end with }}
+
+Create an educational animated video about: {subject}
+Content: {text[:2000]}
+
+CRITICAL MANIM REQUIREMENTS:
+- Use ONLY Text() for all text - NO MathTex, NO Tex, NO LaTeX
+- For math: Write as strings like 'x^2 + 5x + 6' or 'f(x) = x^2'
+- Include 3-5 text elements with animations
+- Use: Write(), FadeIn(), FadeOut(), Transform()
+- Add colors: RED, BLUE, GREEN, YELLOW
+- Position: .to_edge(UP), .shift(DOWN*2)
+- Duration: 30-45 seconds total (use self.wait() to control timing)
+
+Required JSON (NO trailing commas):
+{{
+  "description": "Brief description of the video",
+  "narration": [
+    {{"text": "Intro explanation", "duration": 8}},
+    {{"text": "Main concept", "duration": 10}},
+    {{"text": "Summary", "duration": 8}}
+  ],
+  "manim_code": "{example_code}"
+}}
+
+REMEMBER:
+- NO LaTeX or MathTex - use Text() only
+- Include multiple Text objects with different colors
+- Use self.wait(2-4) between animations for pacing
+- Escape single quotes as \\' inside strings
+- Return ONLY the JSON object
+"""
+        
         resp_text = self._call_gemini_with_retry(prompt, model=self.model_visual)
         result = self._parse_json(resp_text, fallback_keys={
             'description': f'Visual animation for {subject} lesson based on the provided content.',
@@ -385,99 +413,181 @@ class AssignmentService:
             'language': {
                 'type': 'socratic',
                 'instruction': (
-                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    'CRITICAL INSTRUCTIONS:\n'
+                    '1. Return ONLY valid JSON - no markdown, no code blocks, no explanations\n'
+                    '2. Do NOT wrap the JSON in ```json or ``` markers\n'
+                    '3. Do NOT include trailing commas before closing braces or brackets\n'
+                    '4. Start your response directly with { and end with }\n\n'
                     f'{diff_instruction}\n\n'
                     'Create 5-7 Socratic questions to guide student learning about the language concepts. '
                     'Include guidance hints and follow-up prompts.\n\n'
-                    'Use this EXACT format:\n'
+                    'Use this EXACT format (notice: NO trailing commas):\n'
                     '{\n'
                     '  "summary": "Guided questions to help you learn",\n'
                     '  "quiz_type": "socratic",\n'
                     '  "questions": [\n'
-                    '    {"question": "What do you notice about...", "guidance": "Think about how...", "follow_up": "Now consider..."},\n'
-                    '    {"question": "How would you explain...", "guidance": "Look at the pattern...", "follow_up": "Can you apply this..."}\n'
+                    '    {\n'
+                    '      "question": "What do you notice about...",\n'
+                    '      "guidance": "Think about how...",\n'
+                    '      "follow_up": "Now consider..."\n'
+                    '    },\n'
+                    '    {\n'
+                    '      "question": "How would you explain...",\n'
+                    '      "guidance": "Look at the pattern...",\n'
+                    '      "follow_up": "Can you apply this..."\n'
+                    '    }\n'
                     '  ]\n'
                     '}\n\n'
-                    "Return ONLY the JSON object."
+                    "REMEMBER: Start with { and end with }. No markdown formatting."
                 )
             },
             'math': {
                 'type': 'practice',
                 'instruction': (
-                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    'Create 8-10 practice math problems as a JSON object.\n\n'
                     f'{diff_instruction}\n\n'
-                    'Create 8-10 practice math problems with varying difficulty levels (easy, medium, hard). '
-                    'Include step-by-step solutions and common mistakes to avoid.\n\n'
-                    'Use this EXACT format:\n'
+                    'CRITICAL JSON FORMATTING RULES:\n'
+                    '1. All strings must use escaped characters: \\n for newlines, \\" for quotes\n'
+                    '2. Mathematical symbols: Use Unicode or plain text (x^2 not x², ≈ as "approximately")\n'
+                    '3. Degree symbols: Write "degrees" or "deg" instead of °\n'
+                    '4. NO trailing commas anywhere\n'
+                    '5. Each question MUST be complete and self-contained\n\n'
+                    'Required JSON structure:\n'
                     '{\n'
-                    '  "summary": "Practice problems to master the concepts",\n'
+                    '  "summary": "Brief description of quiz",\n'
                     '  "quiz_type": "practice",\n'
                     '  "questions": [\n'
-                    '    {"question": "Solve for x: 2x + 5 = 13", "difficulty": "easy", "solution": "Subtract 5: 2x = 8, then divide by 2: x = 4", "common_mistakes": ["Forgetting to subtract from both sides", "Division errors"]},\n'
-                    '    {"question": "Find the area of a circle with radius 7cm", "difficulty": "medium", "solution": "Use A = πr². A = π(7)² = 49π ≈ 153.94 cm²", "common_mistakes": ["Using diameter instead of radius", "Forgetting to square the radius"]}\n'
+                    '    {\n'
+                    '      "question": "Problem statement with all necessary info",\n'
+                    '      "answer": "Complete answer with units",\n'
+                    '      "difficulty": "easy" | "medium" | "hard",\n'
+                    '      "solution": "Step-by-step explanation",\n'
+                    '      "common_mistakes": ["Mistake 1", "Mistake 2"]\n'
+                    '    }\n'
                     '  ]\n'
                     '}\n\n'
-                    "Return ONLY the JSON object."
+                    'EXAMPLE (notice proper escaping and formatting):\n'
+                    '{\n'
+                    '  "summary": "Practice problems for algebra",\n'
+                    '  "quiz_type": "practice",\n'
+                    '  "questions": [\n'
+                    '    {\n'
+                    '      "question": "Solve for x: 2x + 5 = 13",\n'
+                    '      "answer": "x = 4",\n'
+                    '      "difficulty": "easy",\n'
+                    '      "solution": "Subtract 5 from both sides to get 2x = 8. Then divide both sides by 2 to get x = 4.",\n'
+                    '      "common_mistakes": ["Forgetting to apply operations to both sides", "Sign errors when subtracting"]\n'
+                    '    }\n'
+                    '  ]\n'
+                    '}'
                 )
             },
             'science': {
                 'type': 'practice_repeatable',
                 'instruction': (
-                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    'CRITICAL INSTRUCTIONS:\n'
+                    '1. Return ONLY valid JSON - no markdown, no code blocks, no explanations\n'
+                    '2. Do NOT wrap the JSON in ```json or ``` markers\n'
+                    '3. Do NOT include trailing commas before closing braces or brackets\n'
+                    '4. Start your response directly with { and end with }\n\n'
                     f'{diff_instruction}\n\n'
                     'Create 8-10 science practice questions that can be repeated for mastery. '
                     'Include detailed explanations and real-world applications.\n\n'
-                    'Use this EXACT format:\n'
+                    'Use this EXACT format (notice: NO trailing commas):\n'
                     '{\n'
                     '  "summary": "Practice questions to build understanding",\n'
                     '  "quiz_type": "practice_repeatable",\n'
                     '  "questions": [\n'
-                    '    {"question": "What is photosynthesis?", "answer": "The process plants use to convert light energy into chemical energy", "explanation": "Plants use chlorophyll to capture sunlight and convert CO2 and water into glucose and oxygen", "real_world_example": "This is how plants produce oxygen for us to breathe"},\n'
-                    '    {"question": "Why does ice float on water?", "answer": "Ice is less dense than liquid water", "explanation": "Water molecules form a crystalline structure when frozen, creating more space between molecules", "real_world_example": "This allows fish to survive winter in frozen ponds"}\n'
+                    '    {\n'
+                    '      "question": "What is photosynthesis?",\n'
+                    '      "answer": "The process plants use to convert light energy into chemical energy",\n'
+                    '      "explanation": "Plants use chlorophyll to capture sunlight and convert CO2 and water into glucose and oxygen",\n'
+                    '      "real_world_example": "This is how plants produce oxygen for us to breathe"\n'
+                    '    },\n'
+                    '    {\n'
+                    '      "question": "Why does ice float on water?",\n'
+                    '      "answer": "Ice is less dense than liquid water",\n'
+                    '      "explanation": "Water molecules form a crystalline structure when frozen, creating more space between molecules",\n'
+                    '      "real_world_example": "This allows fish to survive winter in frozen ponds"\n'
+                    '    }\n'
                     '  ]\n'
                     '}\n\n'
-                    "Return ONLY the JSON object."
+                    "REMEMBER: Start with { and end with }. No markdown formatting."
                 )
             },
             'history': {
                 'type': 'timeline_fill',
                 'instruction': (
-                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    'CRITICAL INSTRUCTIONS:\n'
+                    '1. Return ONLY valid JSON - no markdown, no code blocks, no explanations\n'
+                    '2. Do NOT wrap the JSON in ```json or ``` markers\n'
+                    '3. Do NOT include trailing commas before closing braces or brackets\n'
+                    '4. Start your response directly with { and end with }\n\n'
                     f'{diff_instruction}\n\n'
                     'Create a timeline and famous names fill-in-the-blank exercise for history. '
                     'Include dates, events, and key historical figures. Use ___ for blanks.\n\n'
-                    'Use this EXACT format:\n'
+                    'Use this EXACT format (notice: NO trailing commas):\n'
                     '{\n'
                     '  "summary": "Timeline and key figures to memorize",\n'
                     '  "quiz_type": "timeline_fill",\n'
                     '  "timeline_events": [\n'
-                    '    {"year": "1776", "event_description": "The ___ of Independence was signed", "answer": "Declaration"},\n'
-                    '    {"year": "1945", "event_description": "___ ended with the defeat of Nazi Germany", "answer": "World War II"}\n'
+                    '    {\n'
+                    '      "year": "1776",\n'
+                    '      "event_description": "The ___ of Independence was signed",\n'
+                    '      "answer": "Declaration"\n'
+                    '    },\n'
+                    '    {\n'
+                    '      "year": "1945",\n'
+                    '      "event_description": "___ ended with the defeat of Nazi Germany",\n'
+                    '      "answer": "World War II"\n'
+                    '    }\n'
                     '  ],\n'
                     '  "famous_people": [\n'
-                    '    {"description": "___ led the civil rights movement", "answer": "Martin Luther King Jr.", "significance": "Fought for racial equality through nonviolent protest"},\n'
-                    '    {"description": "___ discovered America in 1492", "answer": "Christopher Columbus", "significance": "Opened European exploration of the Americas"}\n'
+                    '    {\n'
+                    '      "description": "___ led the civil rights movement",\n'
+                    '      "answer": "Martin Luther King Jr.",\n'
+                    '      "significance": "Fought for racial equality through nonviolent protest"\n'
+                    '    },\n'
+                    '    {\n'
+                    '      "description": "___ discovered America in 1492",\n'
+                    '      "answer": "Christopher Columbus",\n'
+                    '      "significance": "Opened European exploration of the Americas"\n'
+                    '    }\n'
                     '  ]\n'
                     '}\n\n'
-                    "Return ONLY the JSON object."
+                    "REMEMBER: Start with { and end with }. No markdown formatting."
                 )
             },
             'geography': {
                 'type': 'practice_repeatable',
                 'instruction': (
-                    'CRITICAL: Return ONLY valid JSON, nothing else. No explanations, no markdown.\n\n'
+                    'CRITICAL INSTRUCTIONS:\n'
+                    '1. Return ONLY valid JSON - no markdown, no code blocks, no explanations\n'
+                    '2. Do NOT wrap the JSON in ```json or ``` markers\n'
+                    '3. Do NOT include trailing commas before closing braces or brackets\n'
+                    '4. Start your response directly with { and end with }\n\n'
                     'Create 8-10 geography practice questions that can be repeated for mastery. '
                     'Include maps, locations, features, and facts.\n\n'
-                    'Use this EXACT format:\n'
+                    'Use this EXACT format (notice: NO trailing commas):\n'
                     '{\n'
                     '  "summary": "Practice questions to learn geography",\n'
                     '  "quiz_type": "practice_repeatable",\n'
                     '  "questions": [\n'
-                    '    {"question": "What is the capital of France?", "answer": "Paris", "hint": "This city is known for the Eiffel Tower", "interesting_fact": "Paris is called the City of Light"},\n'
-                    '    {"question": "Which river is the longest in the world?", "answer": "The Nile River", "hint": "It flows through Egypt", "interesting_fact": "The Nile is about 6,650 km long"}\n'
+                    '    {\n'
+                    '      "question": "What is the capital of France?",\n'
+                    '      "answer": "Paris",\n'
+                    '      "hint": "This city is known for the Eiffel Tower",\n'
+                    '      "interesting_fact": "Paris is called the City of Light"\n'
+                    '    },\n'
+                    '    {\n'
+                    '      "question": "Which river is the longest in the world?",\n'
+                    '      "answer": "The Nile River",\n'
+                    '      "hint": "It flows through Egypt",\n'
+                    '      "interesting_fact": "The Nile is about 6,650 km long"\n'
+                    '    }\n'
                     '  ]\n'
                     '}\n\n'
-                    "Return ONLY the JSON object."
+                    "REMEMBER: Start with { and end with }. No markdown formatting."
                 )
             }
         }
@@ -775,8 +885,8 @@ class AssignmentService:
             
         cleaned = text.strip()
         
-        # Try to extract JSON from markdown code blocks
-        m = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, re.DOTALL)
+        # Try to extract JSON from markdown code blocks (both ```json and ``` variants)
+        m = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, re.DOTALL | re.IGNORECASE)
         if m:
             cleaned = m.group(1).strip()
         
@@ -788,13 +898,46 @@ class AssignmentService:
             if start != -1 and end != -1:
                 cleaned = cleaned[start:end+1]
         
+        # Fix common JSON issues before parsing
+        # Remove trailing commas before closing braces/brackets
+        cleaned = re.sub(r',(\s*[}\]])', r'\1', cleaned)
+        
+        # Remove comments (// and /* */)
+        cleaned = re.sub(r'//[^\n]*', '', cleaned)
+        cleaned = re.sub(r'/\*.*?\*/', '', cleaned, flags=re.DOTALL)
+        
+        # Fix common escaping issues
+        # Replace problematic Unicode characters that might cause issues
+        replacements = {
+            '\u2018': "'",  # Left single quote
+            '\u2019': "'",  # Right single quote
+            '\u201c': '"',  # Left double quote
+            '\u201d': '"',  # Right double quote
+            '\u2013': '-',  # En dash
+            '\u2014': '--', # Em dash
+            '\u2026': '...', # Ellipsis
+        }
+        for old, new in replacements.items():
+            cleaned = cleaned.replace(old, new)
+        
         try:
             data = _json.loads(cleaned)
             print(f"✅ Successfully parsed JSON with {len(str(data))} chars")
             return {**fallback_keys, **data}
-        except Exception as e:
-            print(f"⚠️ JSON parsing failed: {str(e)[:100]}, using fallback")
+        except _json.JSONDecodeError as e:
+            print(f"⚠️ JSON parsing failed: {str(e)[:100]}")
+            print(f"⚠️ Error at line {e.lineno}, column {e.colno}")
             print(f"⚠️ Received text (first 200 chars): {text[:200]}")
+            
+            # Try to show the problematic area
+            if e.pos and e.pos < len(cleaned):
+                start = max(0, e.pos - 50)
+                end = min(len(cleaned), e.pos + 50)
+                print(f"⚠️ Problem area: ...{cleaned[start:end]}...")
+            
+            return fallback_keys
+        except Exception as e:
+            print(f"⚠️ Unexpected error parsing JSON: {str(e)[:100]}")
             return fallback_keys
 
     def _default_manim_code(self, title: str) -> str:

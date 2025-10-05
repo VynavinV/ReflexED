@@ -121,5 +121,36 @@ def regenerate_quiz(assignment_id):
         return jsonify({'error': str(e)}), 500
 
 
+@assignments_bp.route('/<assignment_id>', methods=['DELETE'])
+def delete_assignment(assignment_id):
+    """Delete an assignment and all its associated data."""
+    try:
+        import shutil
+        
+        assignment = Assignment.query.get_or_404(assignment_id)
+        
+        # Delete associated files
+        upload_dir = os.path.join(os.path.abspath('uploads'), assignment_id)
+        if os.path.exists(upload_dir):
+            shutil.rmtree(upload_dir)
+        
+        # Delete assignment versions (cascade should handle this, but being explicit)
+        AssignmentVersion.query.filter_by(assignment_id=assignment_id).delete()
+        
+        # Delete the assignment
+        db.session.delete(assignment)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Assignment {assignment_id} deleted successfully'
+        }), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
 def a_slug(text: str) -> str:
     return ''.join(c.lower() if c.isalnum() else '-' for c in text)[:80]
