@@ -222,8 +222,9 @@ class AssignmentService:
             narration_segments = visual.get('narration', [])
             if narration_segments and isinstance(narration_segments, list):
                 print(f"🎤 Generating narration audio from {len(narration_segments)} segments...")
-                # Combine all narration text
-                full_narration = ' '.join(seg.get('text', '') for seg in narration_segments)
+                # Combine all narration text and sanitize to avoid reading formulas/symbols
+                raw_narration = ' '.join(seg.get('text', '') for seg in narration_segments)
+                full_narration = self._sanitize_narration_text(raw_narration)
                 narration_audio = self._synthesize_audio(full_narration, out_dir=a_dir, name='narration.mp3')
             
             # Render Manim video
@@ -364,6 +365,10 @@ class AssignmentService:
 - Include axis labels with get_axis_labels()
 - Position axes with .scale() and .shift()
 
+NARRATION RULES (CRITICAL):
+- Do NOT speak formulas or symbols aloud. Refer to them as "as shown on screen".
+- In narration, replace symbols with words: use "to the power of" for ^, "equals" for =, and avoid using quotes.
+
 Example for graphing:
 axes = Axes(x_range=[-4, 4, 1], y_range=[-8, 8, 2], x_length=6, y_length=5)
 graph = axes.plot(lambda x: x**2, color=YELLOW)
@@ -376,6 +381,10 @@ self.play(Create(axes), Create(graph))
 - Use Transform() to show how sentences change (e.g., tense, word order).
 - Use different colors to highlight parts of speech (nouns, verbs, adjectives).
 - Animate text appearing and disappearing to build sentences step-by-step.
+
+NARRATION RULES (CRITICAL):
+- Do NOT read foreign spellings or phonetic details letter-by-letter; describe what is shown on screen.
+- Avoid special symbols in narration; use words instead if needed.
 
 Example for showing a translation:
 sentence_fr = Text('Le chat est noir', font_size=40, color=YELLOW)
@@ -394,6 +403,10 @@ self.play(Write(sentence_en))
 - Add visual elements: Circle(), Square(), Rectangle() if relevant
 - Use colors: RED, BLUE, GREEN, YELLOW
 - Position: .to_edge(UP), .shift(DOWN*2)
+
+NARRATION RULES (CRITICAL):
+- Narration should reference "as shown on screen" instead of reading exact text with symbols.
+- Replace symbols with words in narration (e.g., ^ -> "to the power of", = -> "equals").
 """
         
         prompt = f"""CRITICAL INSTRUCTIONS:
@@ -412,6 +425,10 @@ ANIMATION REQUIREMENTS:
 - Duration: 30-45 seconds total (use self.wait() to control timing)
 - Multiple visual elements (not just text)
 - Smooth transitions between scenes
+
+NARRATION REQUIREMENTS:
+- Do NOT read formulas or special characters aloud. If needed, say "as shown on screen".
+- Replace symbols in narration with words ("to the power of", "equals").
 
 Required JSON (NO trailing commas):
 {{
@@ -440,6 +457,42 @@ REMEMBER:
         })
         print(f"🎬 Visual plan generated: {len(result.get('description', ''))} chars description, {len(result.get('manim_code', ''))} chars code")
         return result
+
+    def _sanitize_narration_text(self, s: str) -> str:
+        """Make narration TTS-friendly: replace symbols with words and avoid quotes.
+        - ^ -> ' to the power of '
+        - = -> ' equals '
+        - * -> ' times '
+        - / -> ' divided by '
+        - Remove backticks and excessive quotes
+        """
+        if not s:
+            return s
+        replacements = {
+            '^': ' to the power of ',
+            '=': ' equals ',
+            '*': ' times ',
+            '/': ' divided by ',
+            '+': ' plus ',
+            '-': ' minus ',
+            '×': ' times ',
+            '÷': ' divided by ',
+            '≈': ' approximately ',
+            '≠': ' not equal to ',
+            '≥': ' greater than or equal to ',
+            '≤': ' less than or equal to ',
+            '±': ' plus or minus ',
+            '∞': ' infinity ',
+            '√': ' square root ',
+            '∑': ' summation ',
+            '∫': ' integral ',
+            'π': ' pi ',
+        }
+        for k, v in replacements.items():
+            s = s.replace(k, v)
+        # Collapse multiple spaces
+        s = ' '.join(s.replace('`', '').replace('"', '').replace("'", '').split())
+        return s
 
     def _gen_quiz(self, subject: str, text: str, difficulty: str = 'medium') -> Dict:
         print(f"🧠 Creating quiz for {subject} with difficulty={difficulty}...")
@@ -670,6 +723,8 @@ REMEMBER:
     # ------------- Synthesis/Rendering -------------
     def _synthesize_audio(self, script: str, out_dir: str, name: str) -> str:
         """Use ElevenLabs SDK to synthesize audio; write placeholder MP3 if no key provided."""
+        # Sanitize to avoid reading special characters/symbols aloud
+        script = self._sanitize_narration_text(script)
         print(f"🔊 Synthesizing audio: {len(script)} chars of script")
         os.makedirs(out_dir, exist_ok=True)
         out_path = os.path.join(out_dir, name)
@@ -738,7 +793,7 @@ REMEMBER:
                 audio_segments = []
                 for i, segment in enumerate(discussion):
                     speaker = segment.get('speaker', 'Host')
-                    text = segment.get('text', '')
+                    text = self._sanitize_narration_text(segment.get('text', ''))
                     voice_id = voices.get(speaker, voices["Host"])
                     
                     print(f"  Segment {i+1}/{len(discussion)}: {speaker} ({len(text)} chars)")
@@ -777,12 +832,12 @@ REMEMBER:
                 print(f"✅ Podcast synthesized: {file_size} bytes")
             else:
                 # Fallback: single voice with all text
-                all_text = ' '.join(seg.get('text', '') for seg in discussion)
+                all_text = self._sanitize_narration_text(' '.join(seg.get('text', '') for seg in discussion))
                 return self._synthesize_audio(all_text, out_dir, name)
                 
         except Exception as e:
             print(f"⚠️ Podcast synthesis failed: {e}, using fallback")
-            all_text = ' '.join(seg.get('text', '') for seg in discussion)
+            all_text = self._sanitize_narration_text(' '.join(seg.get('text', '') for seg in discussion))
             return self._synthesize_audio(all_text, out_dir, name)
         
         return out_path
