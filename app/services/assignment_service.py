@@ -369,6 +369,24 @@ axes = Axes(x_range=[-4, 4, 1], y_range=[-8, 8, 2], x_length=6, y_length=5)
 graph = axes.plot(lambda x: x**2, color=YELLOW)
 self.play(Create(axes), Create(graph))
 """
+        elif subject.lower() == 'language':
+            subject_instructions = """LANGUAGE-SPECIFIC REQUIREMENTS:
+- Use Text() to display vocabulary, sentences, and translations.
+- Show verb conjugations using tables or lists.
+- Use Transform() to show how sentences change (e.g., tense, word order).
+- Use different colors to highlight parts of speech (nouns, verbs, adjectives).
+- Animate text appearing and disappearing to build sentences step-by-step.
+
+Example for showing a translation:
+sentence_fr = Text('Le chat est noir', font_size=40, color=YELLOW)
+sentence_en = Text('The cat is black', font_size=40, color=BLUE)
+sentence_fr.to_edge(UP)
+sentence_en.next_to(sentence_fr, DOWN, buff=0.5)
+self.play(Write(sentence_fr))
+self.wait(1)
+self.play(Write(sentence_en))
+"""
+            example_code = r"from manim import *\\n\\nclass LanguageLesson(Scene):\\n    def construct(self):\\n        title = Text('French Verb: Être', font_size=48, color=BLUE)\\n        title.to_edge(UP)\\n        self.play(Write(title))\\n        self.wait(1.5)\\n\\n        # Present Tense\\n        t_present = Text('Present Tense', font_size=36, color=YELLOW).next_to(title, DOWN, buff=0.5)\\n        self.play(Write(t_present))\\n\\n        conjugations = VGroup(\\n            Text('Je suis - I am', font_size=32),\\n            Text('Tu es - You are', font_size=32),\\n            Text('Il/Elle est - He/She is', font_size=32)\\n        ).arrange(DOWN, buff=0.3).next_to(t_present, DOWN, buff=0.5)\\n        self.play(Write(conjugations))\\n        self.wait(3)\\n\\n        # Past Tense\\n        t_past = Text('Past Tense (Passé Composé)', font_size=36, color=GREEN).next_to(title, DOWN, buff=0.5)\\n        past_conjugations = VGroup(\\n            Text('J\\'ai été - I have been', font_size=32),\\n            Text('Tu as été - You have been', font_size=32),\\n            Text('Il/Elle a été - He/She has been', font_size=32)\\n        ).arrange(DOWN, buff=0.3).next_to(t_past, DOWN, buff=0.5)\\n\\n        self.play(Transform(t_present, t_past), Transform(conjugations, past_conjugations))\\n        self.wait(3)\\n\\n        self.play(FadeOut(t_present), FadeOut(conjugations), FadeOut(title))"
         else:
             subject_instructions = """GENERAL REQUIREMENTS:
 - Use Text() for all text - NO MathTex, NO Tex

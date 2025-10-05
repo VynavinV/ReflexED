@@ -63,3 +63,10 @@ htmlcov/
 *.pid
 *.seed
 *.pid.lock
+
+# Backups
+*.bak
+*.backup
+
+# Uploads
+uploads/

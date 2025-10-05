@@ -1,6 +1,6 @@
-# PolyLearn - AI-Powered Translation Coach Platform
+# ReflexED - AI-Powered Translation Coach Platform
 
-PolyLearn is a **production-ready** virtual learning environment featuring an AI Translation Coach that teaches foreign languages through guided questions instead of direct translations. Designed for students with diverse learning needs, including those with ADHD, dyslexia, and non-native speakers.
+ReflexED is a **production-ready** virtual learning environment featuring an AI Translation Coach that teaches foreign languages through guided questions instead of direct translations. Designed for students with diverse learning needs, including those with ADHD, dyslexia, and non-native speakers.
 
 ## 🎯 Project Status: 100% Production-Ready Backend ✅
 
@@ -54,7 +54,7 @@ python -m http.server 8000
 |----------|-------------|
 | **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** | Complete setup and deployment guide |
 | **[README_BACKEND.md](README_BACKEND.md)** | Backend architecture and API docs |
-| **[PolyLearn_API.postman_collection.json](PolyLearn_API.postman_collection.json)** | Import into Postman for testing |
+| **[ReflexED_API.postman_collection.json](ReflexED_API.postman_collection.json)** | Import into Postman for testing |
 
 ---
 
@@ -95,7 +95,7 @@ script.js             # Interactive functionality
 - Input: "I went to the store"
 - Output: "Fui a la tienda" ✅ (Done!)
 
-**PolyLearn AI Coach:**
+**ReflexED AI Coach:**
 - Input: "I went to the store"
 - AI Asks:
   1. 🤔 "What tense should 'went' be? Preterite or imperfect?"
@@ -347,6 +347,8 @@ Built with ❤️ by the PolyLearn team for accessible education
 - **Bugs**: Check logs in `logs/polylearn.log`
 
 ---
+
+<small>Built with help from GitHub Copilot and Claude Sonnet 4.5</small>
 
 **🎉 The backend is 100% production-ready! Start the server and test it out!**
 

@@ -1,5 +1,5 @@
 """
-Configuration management for PolyLearn Flask application.
+Configuration management for ReflexED Flask application.
 Supports multiple environments: development, testing, production.
 """
 import os
@@ -15,12 +15,12 @@ class Config:
     
     # Application
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    APP_NAME = 'PolyLearn'
+    APP_NAME = 'ReflexED'
     
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        'sqlite:///polylearn.db'
+        'sqlite:///reflexed.db'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {

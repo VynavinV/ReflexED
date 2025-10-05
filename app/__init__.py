@@ -1,5 +1,5 @@
 """
-PolyLearn Flask Application Factory.
+ReflexED Flask Application Factory.
 """
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -128,14 +128,14 @@ def register_blueprints(app):
         return jsonify({
             'status': 'healthy',
             'version': '1.0.0',
-            'service': 'PolyLearn API'
+            'service': 'ReflexED API'
         }), 200
     
     # API root
     @app.route('/api')
     def api_root():
         return jsonify({
-            'message': 'Welcome to PolyLearn API',
+            'message': 'Welcome to ReflexED API',
             'version': '1.0.0',
             'endpoints': {
                 'auth': '/api/auth/*',
@@ -189,7 +189,7 @@ def setup_logging(app):
         
         # File handler
         file_handler = RotatingFileHandler(
-            'logs/polylearn.log',
+            'logs/reflexed.log',
             maxBytes=10240000,  # 10MB
             backupCount=10
         )
@@ -202,4 +202,4 @@ def setup_logging(app):
         app.logger.addHandler(file_handler)
         
         app.logger.setLevel(logging.INFO)
-        app.logger.info('PolyLearn startup')
+        app.logger.info('ReflexED startup')

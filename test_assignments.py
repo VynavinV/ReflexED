@@ -102,7 +102,7 @@ def test_student_view():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("PolyLearn Assignment API Test Suite")
+    print("ReflexED Assignment API Test Suite")
     print("=" * 60)
     
     # Run tests

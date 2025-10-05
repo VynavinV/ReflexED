@@ -12,9 +12,11 @@ assignments_bp = Blueprint('assignments', __name__, url_prefix='/api/assignments
 
 
 @assignments_bp.route('', methods=['GET'])
+@jwt_required()
 def list_assignments():
-    """List assignments (all for now; hackathon demo)."""
-    rows = Assignment.query.order_by(Assignment.created_at.desc()).all()
+    """List assignments for the logged-in teacher."""
+    teacher_id = get_jwt_identity()
+    rows = Assignment.query.filter_by(teacher_id=teacher_id).order_by(Assignment.created_at.desc()).all()
     return jsonify([a.to_dict(include_versions=False) for a in rows]), 200
 
 

@@ -1,5 +1,5 @@
 """
-Database models for PolyLearn application.
+Database models for ReflexED application.
 """
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash

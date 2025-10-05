@@ -30,7 +30,7 @@ function initializeApp() {
 
 // ==================== PREFERENCES MANAGEMENT ====================
 function loadPreferences() {
-    const saved = localStorage.getItem('polylearn-preferences');
+    const saved = localStorage.getItem('reflexed-preferences');
     if (saved) {
         state.preferences = JSON.parse(saved);
         state.theme = state.preferences.theme || 'light';
@@ -47,7 +47,7 @@ function savePreferences() {
         readingSpeed: state.readingSpeed,
         language: state.language
     };
-    localStorage.setItem('polylearn-preferences', JSON.stringify(state.preferences));
+    localStorage.setItem('reflexed-preferences', JSON.stringify(state.preferences));
 }
 
 function applyPreferences() {

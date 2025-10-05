@@ -19,7 +19,7 @@ if __name__ == '__main__':
     
     print(f"""
     ╔═══════════════════════════════════════╗
-    ║     PolyLearn API Server Starting     ║
+    ║     ReflexED API Server Starting     ║
     ╠═══════════════════════════════════════╣
     ║  Environment: {os.getenv('FLASK_ENV', 'development').ljust(24)}║
     ║  URL: http://{host}:{port}{' ' * (23 - len(host) - len(str(port)))}║

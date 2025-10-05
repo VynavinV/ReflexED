@@ -1,4 +1,4 @@
-# PolyLearn - Production Flask API Setup Guide
+# ReflexED - Production Flask API Setup Guide
 
 ## 🎉 Congratulations! Your Flask API is 100% Production-Ready
 
@@ -78,7 +78,7 @@ Add these to your `.env` file.
 ## 📡 Testing the API
 
 ### Option 1: Using Postman (Easiest)
-1. Import `PolyLearn_API.postman_collection.json` into Postman
+1. Import `ReflexED_API.postman_collection.json` into Postman
 2. Run "Register User" → "Login" (auto-saves token)
 3. Test all other endpoints
 

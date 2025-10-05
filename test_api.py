@@ -32,7 +32,7 @@ def test_register():
     print_section("Testing User Registration")
     try:
         data = {
-            "email": "testbot@polylearn.com",
+            "email": "testbot@reflexed.com",
             "username": "testbot",
             "password": "TestBot123",
             "first_name": "Test",
@@ -171,7 +171,7 @@ def test_get_progress(token):
 
 def main():
     """Run all tests."""
-    print("\n🚀 PolyLearn API Test Suite")
+    print("\n🚀 ReflexED API Test Suite")
     print("="*60)
     print("Make sure the server is running: python run.py")
     print("="*60)
@@ -199,7 +199,7 @@ def main():
     print("✅ All tests completed!")
     print("="*60)
     print("\n📚 Next steps:")
-    print("  1. Import PolyLearn_API.postman_collection.json into Postman")
+    print("  1. Import ReflexED_API.postman_collection.json into Postman")
     print("  2. Update your frontend to call these APIs")
     print("  3. Run pytest for comprehensive testing")
     print()

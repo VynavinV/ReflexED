@@ -5,15 +5,15 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: polylearn
-      POSTGRES_USER: polylearn_user
+      POSTGRES_DB: reflexed
+      POSTGRES_USER: reflexed_user
       POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U polylearn_user"]
+      test: ["CMD-SHELL", "pg_isready -U reflexed_user"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,7 +34,7 @@ services:
     build: .
     environment:
       FLASK_ENV: production
-      DATABASE_URL: postgresql://polylearn_user:${DB_PASSWORD:-changeme}@db:5432/polylearn
+      DATABASE_URL: postgresql://reflexed_user:${DB_PASSWORD:-changeme}@db:5432/reflexed
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
