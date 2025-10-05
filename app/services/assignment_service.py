@@ -345,8 +345,38 @@ class AssignmentService:
     def _gen_visual_plan(self, subject: str, text: str) -> Dict:
         print(f"🎬 Creating visual plan for {subject}...")
         
-        # Create example with proper escaping
-        example_code = r"from manim import *\n\nclass PolynomialLesson(Scene):\n    def construct(self):\n        title = Text('Graphing Polynomials', font_size=52, color=BLUE)\n        title.to_edge(UP)\n        self.play(Write(title))\n        self.wait(2)\n        \n        eq1 = Text('f(x) = x^2', font_size=40, color=YELLOW)\n        eq1.shift(UP)\n        self.play(FadeIn(eq1))\n        self.wait(3)\n        \n        self.play(FadeOut(eq1))\n        eq2 = Text('f(x) = x^3 - 2x', font_size=40, color=GREEN)\n        self.play(FadeIn(eq2))\n        self.wait(3)\n        \n        self.play(FadeOut(eq2))\n        summary = Text('Higher degrees = More curves!', font_size=36, color=RED)\n        self.play(Write(summary))\n        self.wait(2)\n        self.play(FadeOut(summary), FadeOut(title))"
+        # Different examples based on subject
+        if subject.lower() == 'math':
+            # Example with actual graphs for math
+            example_code = r"from manim import *\n\nclass PolynomialLesson(Scene):\n    def construct(self):\n        # Title\n        title = Text('Graphing Polynomials', font_size=48, color=BLUE)\n        title.to_edge(UP)\n        self.play(Write(title))\n        self.wait(1.5)\n        \n        # Create axes\n        axes = Axes(\n            x_range=[-4, 4, 1],\n            y_range=[-8, 8, 2],\n            x_length=6,\n            y_length=5,\n            axis_config={'color': WHITE, 'include_tip': True}\n        )\n        axes.scale(0.7)\n        axes_labels = axes.get_axis_labels(x_label='x', y_label='y')\n        \n        # Quadratic function\n        eq1_label = Text('f(x) = x^2', font_size=32, color=YELLOW)\n        eq1_label.next_to(title, DOWN).shift(LEFT*2)\n        \n        graph1 = axes.plot(lambda x: x**2, color=YELLOW, x_range=[-2.5, 2.5])\n        \n        self.play(Create(axes), Write(axes_labels))\n        self.play(Write(eq1_label))\n        self.play(Create(graph1), run_time=2)\n        self.wait(2)\n        \n        # Cubic function\n        eq2_label = Text('f(x) = x^3 - 2x', font_size=32, color=GREEN)\n        eq2_label.next_to(title, DOWN).shift(LEFT*2)\n        \n        graph2 = axes.plot(lambda x: x**3 - 2*x, color=GREEN, x_range=[-2, 2])\n        \n        self.play(Transform(eq1_label, eq2_label))\n        self.play(Transform(graph1, graph2), run_time=2)\n        self.wait(2)\n        \n        # Summary\n        self.play(FadeOut(graph1), FadeOut(eq1_label), FadeOut(axes), FadeOut(axes_labels))\n        summary = Text('Different degrees create\\ndifferent curve shapes!', font_size=36, color=RED)\n        self.play(Write(summary))\n        self.wait(2)\n        self.play(FadeOut(summary), FadeOut(title))"
+        else:
+            # Example with text and shapes for other subjects
+            example_code = r"from manim import *\n\nclass Lesson(Scene):\n    def construct(self):\n        title = Text('Lesson Topic', font_size=52, color=BLUE)\n        title.to_edge(UP)\n        self.play(Write(title))\n        self.wait(2)\n        \n        concept1 = Text('First Key Concept', font_size=40, color=YELLOW)\n        self.play(FadeIn(concept1))\n        self.wait(3)\n        \n        self.play(FadeOut(concept1))\n        concept2 = Text('Second Key Concept', font_size=40, color=GREEN)\n        self.play(FadeIn(concept2))\n        self.wait(3)\n        \n        self.play(FadeOut(concept2))\n        summary = Text('Key Takeaway!', font_size=36, color=RED)\n        self.play(Write(summary))\n        self.wait(2)\n        self.play(FadeOut(summary), FadeOut(title))"
+        
+        # Build prompt based on subject
+        if subject.lower() == 'math':
+            subject_instructions = """MATH-SPECIFIC REQUIREMENTS:
+- Use Axes() to create coordinate systems
+- Use axes.plot(lambda x: ...) to graph actual functions
+- For polynomials: plot quadratic (x**2), cubic (x**3), etc.
+- Show multiple graphs with different colors
+- Use Transform() to morph one graph into another
+- Include axis labels with get_axis_labels()
+- Position axes with .scale() and .shift()
+
+Example for graphing:
+axes = Axes(x_range=[-4, 4, 1], y_range=[-8, 8, 2], x_length=6, y_length=5)
+graph = axes.plot(lambda x: x**2, color=YELLOW)
+self.play(Create(axes), Create(graph))
+"""
+        else:
+            subject_instructions = """GENERAL REQUIREMENTS:
+- Use Text() for all text - NO MathTex, NO Tex
+- Include 3-5 text elements with animations
+- Add visual elements: Circle(), Square(), Rectangle() if relevant
+- Use colors: RED, BLUE, GREEN, YELLOW
+- Position: .to_edge(UP), .shift(DOWN*2)
+"""
         
         prompt = f"""CRITICAL INSTRUCTIONS:
 1. Return ONLY valid JSON - no markdown, no code blocks, no explanations
@@ -357,29 +387,28 @@ class AssignmentService:
 Create an educational animated video about: {subject}
 Content: {text[:2000]}
 
-CRITICAL MANIM REQUIREMENTS:
-- Use ONLY Text() for all text - NO MathTex, NO Tex, NO LaTeX
-- For math: Write as strings like 'x^2 + 5x + 6' or 'f(x) = x^2'
-- Include 3-5 text elements with animations
-- Use: Write(), FadeIn(), FadeOut(), Transform()
-- Add colors: RED, BLUE, GREEN, YELLOW
-- Position: .to_edge(UP), .shift(DOWN*2)
+{subject_instructions}
+
+ANIMATION REQUIREMENTS:
+- Use: Write(), Create(), FadeIn(), FadeOut(), Transform()
 - Duration: 30-45 seconds total (use self.wait() to control timing)
+- Multiple visual elements (not just text)
+- Smooth transitions between scenes
 
 Required JSON (NO trailing commas):
 {{
   "description": "Brief description of the video",
   "narration": [
     {{"text": "Intro explanation", "duration": 8}},
-    {{"text": "Main concept", "duration": 10}},
-    {{"text": "Summary", "duration": 8}}
+    {{"text": "Main concept with details", "duration": 10}},
+    {{"text": "Summary and conclusion", "duration": 8}}
   ],
   "manim_code": "{example_code}"
 }}
 
 REMEMBER:
-- NO LaTeX or MathTex - use Text() only
-- Include multiple Text objects with different colors
+- For math: Include actual graphs using axes.plot()
+- Include multiple visual elements
 - Use self.wait(2-4) between animations for pacing
 - Escape single quotes as \\' inside strings
 - Return ONLY the JSON object

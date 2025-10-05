@@ -1,0 +1,96 @@
+{
+  "summary": "Practice problems for graphing polynomials",
+  "quiz_type": "practice",
+  "questions": [
+    {
+      "question": "Sketch the graph of y = x^3. Identify the end behavior.",
+      "answer": "As x approaches positive infinity, y approaches positive infinity. As x approaches negative infinity, y approaches negative infinity. The graph passes through the origin (0,0).",
+      "difficulty": "easy",
+      "solution": "The graph of y = x^3 is a basic cubic function. It starts in quadrant III, passes through the origin, and continues into quadrant I. The end behavior is determined by the leading term, x^3.",
+      "common_mistakes": [
+        "Incorrectly sketching the shape of the cubic function",
+        "Misunderstanding end behavior"
+      ]
+    },
+    {
+      "question": "Determine the end behavior of the polynomial function f(x) = -2x^5 + 3x^2 - 1.",
+      "answer": "As x approaches positive infinity, f(x) approaches negative infinity. As x approaches negative infinity, f(x) approaches positive infinity.",
+      "difficulty": "medium",
+      "solution": "The end behavior is determined by the leading term, -2x^5. Since the degree is odd and the coefficient is negative, the graph falls to the right and rises to the left.",
+      "common_mistakes": [
+        "Forgetting to consider the sign of the leading coefficient",
+        "Confusing odd and even degree end behavior"
+      ]
+    },
+    {
+      "question": "Find the zeros of the polynomial function g(x) = (x - 2)(x + 1)(x - 3).",
+      "answer": "x = 2, x = -1, x = 3",
+      "difficulty": "easy",
+      "solution": "Set each factor equal to zero and solve for x: x - 2 = 0 => x = 2; x + 1 = 0 => x = -1; x - 3 = 0 => x = 3.",
+      "common_mistakes": [
+        "Sign errors when solving for x",
+        "Forgetting to set each factor to zero"
+      ]
+    },
+    {
+      "question": "Sketch the graph of y = (x - 1)^2. Identify the vertex.",
+      "answer": "The graph is a parabola with vertex at (1, 0).",
+      "difficulty": "easy",
+      "solution": "The graph of y = (x - 1)^2 is a parabola shifted 1 unit to the right. The vertex is at (1, 0).",
+      "common_mistakes": [
+        "Incorrectly shifting the parabola",
+        "Misidentifying the vertex"
+      ]
+    },
+    {
+      "question": "Determine the multiplicity of the zero x = 2 in the polynomial function h(x) = (x - 2)^3(x + 4).",
+      "answer": "The multiplicity of x = 2 is 3.",
+      "difficulty": "medium",
+      "solution": "The multiplicity of a zero is the exponent of the corresponding factor. In this case, the factor (x - 2) has an exponent of 3, so the multiplicity of x = 2 is 3.",
+      "common_mistakes": [
+        "Confusing the zero with its multiplicity",
+        "Incorrectly identifying the exponent"
+      ]
+    },
+    {
+      "question": "Sketch the graph of y = x^4 - 16. Find the x-intercepts.",
+      "answer": "x-intercepts: x = 2, x = -2. The graph is a quartic function, symmetric about the y-axis.",
+      "difficulty": "medium",
+      "solution": "Factor the equation as a difference of squares: y = (x^2 - 4)(x^2 + 4) = (x - 2)(x + 2)(x^2 + 4). The real roots are x = 2 and x = -2. x^2 + 4 has no real roots. The graph is symmetric about the y-axis because it only contains even powers of x.",
+      "common_mistakes": [
+        "Forgetting to factor completely",
+        "Incorrectly finding the x-intercepts"
+      ]
+    },
+    {
+      "question": "Describe the behavior of the graph of y = x^3 - 4x near its x-intercepts.",
+      "answer": "The graph crosses the x-axis at x = -2, x = 0, and x = 2.",
+      "difficulty": "medium",
+      "solution": "Factor the equation: y = x(x^2 - 4) = x(x - 2)(x + 2). The x-intercepts are x = -2, x = 0, and x = 2. Since each factor has a multiplicity of 1, the graph crosses the x-axis at each intercept.",
+      "common_mistakes": [
+        "Incorrectly factoring the equation",
+        "Misunderstanding the relationship between multiplicity and graph behavior"
+      ]
+    },
+    {
+      "question": "Sketch a possible graph of a polynomial function with zeros at x = -1 (multiplicity 2) and x = 3 (multiplicity 1), and a positive leading coefficient.",
+      "answer": "The graph touches the x-axis at x = -1 and crosses the x-axis at x = 3. The graph rises to the right and falls to the left.",
+      "difficulty": "medium",
+      "solution": "Since x = -1 has multiplicity 2, the graph touches the x-axis at x = -1. Since x = 3 has multiplicity 1, the graph crosses the x-axis at x = 3. With a positive leading coefficient, the graph rises to the right. Since the total degree is 3, the graph falls to the left.",
+      "common_mistakes": [
+        "Confusing touching and crossing behavior",
+        "Incorrectly determining end behavior"
+      ]
+    },
+    {
+      "question": "Given the polynomial p(x) = x^4 + 2x^3 - 3x^2 - 8x - 4, determine if x = -1 is a root. If so, find the multiplicity.",
+      "answer": "Yes, x = -1 is a root with multiplicity 2.",
+      "difficulty": "hard",
+      "solution": "Using synthetic division or direct substitution, we find p(-1) = 0, so x = -1 is a root. Divide p(x) by (x+1) to get x^3 + x^2 - 4x - 4. Test x = -1 again. We find that -1 is a root of x^3 + x^2 - 4x - 4. Divide x^3 + x^2 - 4x - 4 by (x+1) to get x^2 - 4. Therefore, p(x) = (x+1)(x+1)(x^2-4) = (x+1)^2(x-2)(x+2). The multiplicity of the root x = -1 is 2.",
+      "common_mistakes": [
+        "Incorrect synthetic division",
+        "Stopping after finding the root once"
+      ]
+    }
+  ]
+}
