@@ -1,0 +1,54 @@
+{
+  "summary": "Practice questions to build understanding of ionic and covalent bonds",
+  "quiz_type": "practice_repeatable",
+  "questions": [
+    {
+      "question": "What type of bond is formed when electrons are shared between atoms?",
+      "answer": "Covalent bond",
+      "explanation": "Covalent bonds occur when atoms share electrons to achieve a stable electron configuration. This sharing typically occurs between two nonmetals.",
+      "real_world_example": "The bonds between hydrogen and oxygen atoms in a water molecule (H2O) are covalent bonds."
+    },
+    {
+      "question": "What type of bond is formed through the transfer of electrons from one atom to another?",
+      "answer": "Ionic bond",
+      "explanation": "Ionic bonds occur when one atom donates electrons to another, creating ions with opposite charges that are attracted to each other. This typically occurs between a metal and a nonmetal.",
+      "real_world_example": "The bond between sodium (Na) and chlorine (Cl) in sodium chloride (NaCl), or table salt, is an ionic bond."
+    },
+    {
+      "question": "Which type of bond typically results in the formation of molecules with distinct polarity?",
+      "answer": "Covalent bond",
+      "explanation": "Unequal sharing of electrons in a covalent bond can lead to partial positive and negative charges within the molecule, creating a dipole moment and making the molecule polar.",
+      "real_world_example": "Water (H2O) is a polar molecule because oxygen is more electronegative than hydrogen, resulting in a partial negative charge on the oxygen atom and partial positive charges on the hydrogen atoms."
+    },
+    {
+      "question": "Which type of bond typically results in the formation of a crystal lattice structure?",
+      "answer": "Ionic bond",
+      "explanation": "Ionic compounds form crystal lattices due to the strong electrostatic attraction between oppositely charged ions. This arrangement maximizes attraction and minimizes repulsion.",
+      "real_world_example": "Table salt (NaCl) forms a cubic crystal lattice structure due to the arrangement of sodium and chloride ions."
+    },
+    {
+      "question": "Are ionic compounds generally good conductors of electricity in their solid state?",
+      "answer": "No",
+      "explanation": "In the solid state, ions in an ionic compound are locked in place within the crystal lattice and cannot move freely to carry an electric charge. However, when dissolved in water or melted, the ions are free to move and conduct electricity.",
+      "real_world_example": "Solid table salt (NaCl) does not conduct electricity, but a solution of salt water does."
+    },
+    {
+      "question": "Are covalent compounds generally soluble in water?",
+      "answer": "It depends on the polarity of the covalent compound",
+      "explanation": "Polar covalent compounds tend to be soluble in water because water is also polar, and 'like dissolves like'. Nonpolar covalent compounds are generally insoluble in water.",
+      "real_world_example": "Sugar (a polar covalent compound) dissolves in water, while oil (a nonpolar covalent compound) does not."
+    },
+    {
+      "question": "Which type of bond generally has a higher melting point?",
+      "answer": "Ionic bond",
+      "explanation": "Ionic bonds are strong electrostatic attractions that require a significant amount of energy to overcome, resulting in high melting points. Covalent bonds are generally weaker and have lower melting points.",
+      "real_world_example": "Sodium chloride (NaCl), an ionic compound, has a much higher melting point than water (H2O), a covalent compound."
+    },
+    {
+      "question": "What is electronegativity and how does it relate to bond type?",
+      "answer": "Electronegativity is the ability of an atom to attract electrons in a chemical bond. A large difference in electronegativity between two atoms leads to ionic bonds, while a small difference leads to covalent bonds.",
+      "explanation": "If the electronegativity difference is large enough, one atom will essentially 'steal' the electron, forming ions. If the difference is small, the electrons are shared.",
+      "real_world_example": "Fluorine is highly electronegative. When bonded to sodium, the large electronegativity difference results in an ionic bond in sodium fluoride (NaF)."
+    }
+  ]
+}
